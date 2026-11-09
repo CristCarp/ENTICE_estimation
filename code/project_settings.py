@@ -7,6 +7,21 @@ YEARS = [1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2
          2014,2015,2016,2017,2018,2019,2020,2021,2022]
 # [1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,
 # 2014,2015,2016,2017,2018,2019,2020,2021,2022]
+
+# FDI channel (BASE = "FDI"): direction of the knowledge transfer. The FDIP matrix gives, for each investing country, the share of its
+# investment located in each (host region, host sector). Both metrics are written with the same layout: rows = (Region, Sector) of the HOST,
+# columns = investing country.
+#   "outwards": FDIs outwards. The investor receives the R&D of the places where it invests: R&D stock of the host (region, sector) x
+#               share of the investor's FDI located there. The investor has no sector dimension. File rd_dir_fdips_*.csv (what the program
+#               computed until now).
+#   "inwards" : FDIs inwards. R&D transmitted by the investor to the host (region, sector): share of the investor's FDI located there x
+#               R&D stock of the SAME sector s in the investing country. The FDI data have no investor sector, so the investor is assumed
+#               to transmit the R&D of the sector it invests in. File rd_dir_fdips_inwards_*.csv.
+#   "both"    : the two files.
+FDI_DIRECTION = "outwards"
+if FDI_DIRECTION not in ("outwards", "inwards", "both"):
+    raise ValueError(f"FDI_DIRECTION must be 'outwards', 'inwards' or 'both', got {FDI_DIRECTION!r}")
+
 METRIC_SPE = {
     "EXIOBASE_dir": "rd_dir_CI",
     "EXIOBASE_embod": "rd_embod_CI",

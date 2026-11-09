@@ -11,18 +11,15 @@ from project_settings import PATH_WRK, BASE, SRC_DIRS
 OUT_DIRS = SRC_DIRS
 MAP_DIR = PATH_WRK + "mapping/final_aggregation"
 BASES = [BASE]
-# BASES = ["FIGARO", "EXIOBASE", "CAPITAL", "GTAP", "OECD_ICIO", "Patents_Citation"]
-
-# FDI is not aggregated by this program: its matrix has a different shape (columns = investing country only, no sector level)
-UNSUPPORTED_BASES = {"FDI"}
+# BASES = ["FIGARO", "EXIOBASE", "CAPITAL", "GTAP", "FDI", "OECD_ICIO", "Patents_Citation"]
 
 MATRIX_PREFIXES = ["rd_dir_CI", "rd_embod_CI", "rd_imp_CI", "rd_tot_CI", "z_CI", "rd_dir_CAPITAL", "rd_embod_CAPITAL",
-                   "rd_embod_investment_CAPITAL", "rd_dir_cit"]
+                   "rd_embod_investment_CAPITAL", "rd_dir_cit", "rd_dir_fdips"]
 
-# rd_dir_cit (Patents_Citation) is not a mario-based matrix: it has only 2
-# column levels (Region, Sector) instead of 3 (Region, Level, Item), and an
-# extra "Year" level on the rows (Year, Region, Sector) -- needs its own parser
-ASYMMETRIC_PREFIXES = {"rd_dir_cit"}
+# Two matrices are not mario-based and need their own parser (see AGGREGATORS below):
+# - rd_dir_cit (Patents_Citation): only 2 column levels (Region, Sector) instead of 3 (Region, Level, Item),
+#   and an extra "Year" level on the rows (Year, Region, Sector)
+# - rd_dir_fdips (FDI): rows = host (Region, Sector), columns = investing country only (1 level, no sector)
 
 # "long" files Region[,Sector] + year columns, separator ";"
 # -> a single file (all years as columns), in SRDQ (c,s)/{base}/output_loop_{base}/
@@ -93,9 +90,29 @@ def aggregate_citation_matrix_file(path, mapping):
     return df.sort_index().sort_index(axis=1)
 
 
+def aggregate_fdi_matrix_file(path, mapping):
+    # rows: 2 levels (Region, Sector) = host region and sector ; columns: 1 level = investing country (no sector level:
+    # only the sectors of the rows are aggregated)
+    df = pd.read_csv(path, sep=";", index_col=[0, 1])
+    df.index.names = ["Region", "Sector"]
+    warn_unmapped(df.index.get_level_values("Sector").unique(), mapping, path)
+
+    idx = df.index.to_frame(index=False)
+    idx["Sector"] = apply_mapping(idx["Sector"], mapping)
+    df.index = pd.MultiIndex.from_frame(idx)
+
+    df = df.groupby(level=["Region", "Sector"]).sum()                       # rows
+    return df.sort_index().sort_index(axis=1)
+
+
+# parser of each matrix; every other prefix uses aggregate_matrix_file (mario-based matrices)
+AGGREGATORS = {"rd_dir_cit": aggregate_citation_matrix_file, "rd_dir_fdips": aggregate_fdi_matrix_file}
+
+
 def aggregate_vector_file(path, mapping):
     # vector_{metric}_{base}_{year}.csv (OUTPUT_TYPE "vector" of the main program): one row per destination, last column = value.
-    # Keys (Region, Level, Item) for the mario-based bases, (Region, Sector) for Patents_Citation
+    # Keys (Region, Level, Item) for the mario-based bases, (Region, Sector) for Patents_Citation, Region only for FDI
+    # (no sector: copied as-is)
     df = pd.read_csv(path, sep=";", dtype={"Region": str, "Level": str, "Item": str, "Sector": str})
     keys, value = list(df.columns[:-1]), df.columns[-1]
     sector = next((k for k in ("Item", "Sector") if k in keys), None)
@@ -124,9 +141,6 @@ def is_already_aggregated(path):
 
 
 def run_base(base, out_dir):
-    if base in UNSUPPORTED_BASES:
-        print(f"[{base}] not supported by this program (its matrix has a different shape), skipped")
-        return
     mapping = load_mapping(base)
     done = 0
     base_dir = os.path.join(out_dir, base)
@@ -136,7 +150,7 @@ def run_base(base, out_dir):
 
     for year_dir in sorted(glob.glob(os.path.join(base_dir, f"output_loop_{base}_*"))):
         for prefix in MATRIX_PREFIXES:
-            aggregator = aggregate_citation_matrix_file if prefix in ASYMMETRIC_PREFIXES else aggregate_matrix_file
+            aggregator = AGGREGATORS.get(prefix, aggregate_matrix_file)
             for f in glob.glob(os.path.join(year_dir, f"{prefix}_{base}_*.csv")):
                 if is_already_aggregated(f):
                     continue

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="960" height="540" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <title>Schéma des fichiers de mapping</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrowGrey" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect width="960" height="540" fill="#ffffff"/>
+
+  <!-- left: base -> working nomenclature -->
+  <rect x="30" y="150" width="270" height="110" rx="10" fill="#e0f2fe" stroke="#0369a1" stroke-width="1.5"/>
+  <text x="165" y="176" text-anchor="middle" font-size="12" fill="#075985">agg_base_to_rd/</text>
+  <text x="165" y="198" text-anchor="middle" font-size="14.5" font-weight="600" fill="#0c4a6e">agg_{BASE}_to_rd.xlsx</text>
+  <text x="165" y="223" text-anchor="middle" font-size="12" fill="#0c4a6e">nomenclature native de la base MRIO</text>
+  <text x="165" y="240" text-anchor="middle" font-size="12" fill="#0c4a6e">(régions, secteurs)</text>
+
+  <!-- right: R&D -> working nomenclature -->
+  <rect x="660" y="150" width="270" height="110" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/>
+  <text x="795" y="176" text-anchor="middle" font-size="12" fill="#92400e">agg_rd_to_base/</text>
+  <text x="795" y="198" text-anchor="middle" font-size="14.5" font-weight="600" fill="#78350f">agg_rd_to_{BASE}.xlsx</text>
+  <text x="795" y="223" text-anchor="middle" font-size="12" fill="#78350f">codes NACE et pays du fichier de R&amp;D</text>
+  <text x="795" y="240" text-anchor="middle" font-size="12" fill="#78350f">(RDV / RDQ)</text>
+
+  <!-- arrows to the centre -->
+  <line x1="300" y1="205" x2="368" y2="205" stroke="#475569" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="660" y1="205" x2="592" y2="205" stroke="#475569" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- centre: working nomenclature -->
+  <rect x="370" y="130" width="220" height="150" rx="12" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+  <text x="480" y="160" text-anchor="middle" font-size="15" font-weight="600" fill="#14532d">Agrégation commune</text>
+  <text x="480" y="184" text-anchor="middle" font-size="12" fill="#14532d">la plus fine possible</text>
+  <text x="480" y="204" text-anchor="middle" font-size="12" fill="#14532d">(peut déjà être travaillée</text>
+  <text x="480" y="220" text-anchor="middle" font-size="12" fill="#14532d">à ce niveau)</text>
+  <text x="480" y="248" text-anchor="middle" font-size="11.5" fill="#166534">ex. C20 et C21 → C20_C21</text>
+  <text x="480" y="266" text-anchor="middle" font-size="11.5" fill="#166534">sorties : output_loop_{BASE}_{année}</text>
+
+  <!-- identical targets note -->
+  <rect x="320" y="40" width="320" height="52" rx="8" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="480" y="62" text-anchor="middle" font-size="12.5" font-weight="600" fill="#7f1d1d">Mêmes cibles exigées des deux côtés</text>
+  <text x="480" y="80" text-anchor="middle" font-size="11.5" fill="#7f1d1d">sinon la R&amp;D de la cible manquante tombe à zéro</text>
+  <line x1="480" y1="92" x2="480" y2="128" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <!-- arrow down (optional) -->
+  <line x1="480" y1="280" x2="480" y2="352" stroke="#94a3b8" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#arrowGrey)"/>
+  <text x="496" y="322" font-size="12" font-style="italic" fill="#64748b">optionnel</text>
+
+  <!-- bottom: optional extra aggregation -->
+  <rect x="260" y="354" width="440" height="140" rx="12" fill="#f8fafc" stroke="#7c3aed" stroke-width="2" stroke-dasharray="8 5"/>
+  <text x="480" y="382" text-anchor="middle" font-size="15" font-weight="600" fill="#4c1d95">Couche d'agrégation supplémentaire</text>
+  <text x="480" y="404" text-anchor="middle" font-size="12" fill="#5b21b6">si l'on veut regrouper davantage</text>
+  <rect x="320" y="416" width="320" height="56" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.2"/>
+  <text x="480" y="436" text-anchor="middle" font-size="12" fill="#5b21b6">final_aggregation/</text>
+  <text x="480" y="455" text-anchor="middle" font-size="14" font-weight="600" fill="#4c1d95">map_agg_{BASE}.xlsx</text>
+  <text x="480" y="486" text-anchor="middle" font-size="11.5" fill="#5b21b6">appliqué par aggregate_to_common_mapping2.0.py</text>
+
+  <!-- side example of the optional layer -->
+  <text x="30" y="395" font-size="12" font-weight="600" fill="#334155">Exemple dans ce projet</text>
+  <text x="30" y="414" font-size="11.5" fill="#334155">regrouper les 7 bases dans une</text>
+  <text x="30" y="430" font-size="11.5" fill="#334155">même nomenclature de 34 secteurs</text>
+  <text x="30" y="446" font-size="11.5" fill="#334155">pour pouvoir les comparer.</text>
+</svg>

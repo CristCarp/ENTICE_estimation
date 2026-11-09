@@ -1,0 +1,15 @@
+# Configuration et environnement local
+.idea/
+__pycache__/
+.ipynb_checkpoints/
+
+# Données brutes et matrices
+data_raw/
+SRDQ*/
+SRDV*/
+Panels_intermediaires/
+Estimation steps [post know_calc_loop]/
+code/création_panel_estimation/DATA/
+
+# Résultats générés
+runs/

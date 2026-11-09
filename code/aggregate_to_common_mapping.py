@@ -11,10 +11,13 @@ from project_settings import PATH_WRK, BASE, SRC_DIRS
 OUT_DIRS = SRC_DIRS
 MAP_DIR = PATH_WRK + "mapping/final_aggregation"
 BASES = [BASE]
-# BASES = ["FIGARO", "EXIOBASE", "CAPITAL", "GTAP", "FDI", "OECD_ICIO", "Patents_Citation"]
+# BASES = ["FIGARO", "EXIOBASE", "CAPITAL", "GTAP", "OECD_ICIO", "Patents_Citation"]
+
+# FDI is not aggregated by this program: its matrix has a different shape (columns = investing country only, no sector level)
+UNSUPPORTED_BASES = {"FDI"}
 
 MATRIX_PREFIXES = ["rd_dir_CI", "rd_embod_CI", "rd_imp_CI", "rd_tot_CI", "z_CI", "rd_dir_CAPITAL", "rd_embod_CAPITAL",
-                   "rd_embod_investment_CAPITAL", "rd_dir_cit", "rd_dir_fdips"]
+                   "rd_embod_investment_CAPITAL", "rd_dir_cit"]
 
 # rd_dir_cit (Patents_Citation) is not a mario-based matrix: it has only 2
 # column levels (Region, Sector) instead of 3 (Region, Level, Item), and an
@@ -92,8 +95,7 @@ def aggregate_citation_matrix_file(path, mapping):
 
 def aggregate_vector_file(path, mapping):
     # vector_{metric}_{base}_{year}.csv (OUTPUT_TYPE "vector" of the main program): one row per destination, last column = value.
-    # Keys (Region, Level, Item) for the mario-based bases, (Region, Sector) for Patents_Citation, Region only for FDI
-    # (no sector: copied as-is)
+    # Keys (Region, Level, Item) for the mario-based bases, (Region, Sector) for Patents_Citation
     df = pd.read_csv(path, sep=";", dtype={"Region": str, "Level": str, "Item": str, "Sector": str})
     keys, value = list(df.columns[:-1]), df.columns[-1]
     sector = next((k for k in ("Item", "Sector") if k in keys), None)
@@ -122,6 +124,9 @@ def is_already_aggregated(path):
 
 
 def run_base(base, out_dir):
+    if base in UNSUPPORTED_BASES:
+        print(f"[{base}] not supported by this program (its matrix has a different shape), skipped")
+        return
     mapping = load_mapping(base)
     done = 0
     base_dir = os.path.join(out_dir, base)

@@ -1,10 +1,10 @@
-PATH_WRK = "D:/ENTICE/rendu_fin_stage/"
-BASE = "CAPITAL" # EXIOBASE, FIGARO, OECD_ICIO, CAPITAL, GTAP, FDI, or Patents_Citation
+PATH_WRK = "C:/Users/oscar/Desktop/ENTICE_estimation/"
+BASE = "FDI" # EXIOBASE, FIGARO, OECD_ICIO, CAPITAL, GTAP, FDI, or Patents_Citation
 VERSION_EXIO = "3.11.2" # EXIOBASE version to download, used only if BASE == 'EXIOBASE'
-METRIC_WANTED = "embod_investment" # dir or embod or embod_investment
+METRIC_WANTED = "dir" # dir or embod or embod_investment
 MODELES = ["all"] # None, faible, or forte
 YEARS = [1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,
- 2014,2015,2016,2017,2018,2019,2020]
+ 2014,2015,2016,2017,2018,2019,2020,2021,2022]
 # [1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,
 # 2014,2015,2016,2017,2018,2019,2020,2021,2022]
 
@@ -18,7 +18,7 @@ YEARS = [1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2
 #               R&D stock of the SAME sector s in the investing country. The FDI data have no investor sector, so the investor is assumed
 #               to transmit the R&D of the sector it invests in. File rd_dir_fdips_inwards_*.csv.
 #   "both"    : the two files.
-FDI_DIRECTION = "outwards"
+FDI_DIRECTION = "both"
 if FDI_DIRECTION not in ("outwards", "inwards", "both"):
     raise ValueError(f"FDI_DIRECTION must be 'outwards', 'inwards' or 'both', got {FDI_DIRECTION!r}")
 

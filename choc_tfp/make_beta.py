@@ -35,7 +35,7 @@ CONTENT = "dir"             # "dir" : rd_dir_CI | "tot" : rd_embod_CI
 MIN_STARS = 1               # 0 = tous les coefficients, 1 = significatif à 10 % ou mieux, 2 = 5 %, 3 = 1 %
 MIN_BASES = 1               # nombre minimum de bases significatives, sinon beta = FILL
 STAT = "median"             # "median" ou "mean" des coefficients retenus
-UPPER = 0.0                 # borne haute (un beta positif est ramené à 0) ; None = pas de borne
+UPPER = None                # borne haute (un beta positif est ramené à 0) ; None = pas de borne
 LOWER = None                # borne basse ; None = pas de borne
 FILL = 0.0                  # valeur quand pas assez de bases significatives
 OUT_DIR = PATH_WRK + "choc_tfp/inputs/"

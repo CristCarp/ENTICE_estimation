@@ -1,4 +1,4 @@
-PATH_WRK = "D:/ENTICE/"
+PATH_WRK = "C:/Users/oscar/Desktop/ENTICE_estimation/"
 BASE = "GTAP" # EXIOBASE, FIGARO, OECD_ICIO, CAPITAL, GTAP, FDI, or Patents_Citation
 VERSION_EXIO = "3.11.2" # EXIOBASE version to download, used only if BASE == 'EXIOBASE'
 METRIC_WANTED = "dir" # dir or embod or embod_investment

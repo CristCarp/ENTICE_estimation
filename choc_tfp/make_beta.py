@@ -14,6 +14,8 @@ Usage (everything has a default, edit the constants below or pass options):
     python make_beta.py --models 2 4 --bases GTAP FIGARO --min-stars 2 --upper 0
     python make_beta.py --upper none --min-bases 2 --stat mean --out-dir test_beta/ --show
     python make_beta.py --table EXIOBASE=C:/chemin/tab_EXIOBASE_rd_dir_CI.xlsx
+    python make_beta.py --tag _finetune --suffix _tendance                 # tables with year fixed effects (tab_<BASE>_rd_dir_CI_finetune.xlsx)
+    python make_beta.py --tag _finetune --upper 0 --lower -0.25 --suffix _tendance_borne
 """
 import argparse
 import os
@@ -39,6 +41,7 @@ UPPER = None                # borne haute (un beta positif est ramené à 0) ; N
 LOWER = None                # borne basse ; None = pas de borne
 FILL = 0.0                  # valeur quand pas assez de bases significatives
 OUT_DIR = PATH_WRK + "choc_tfp/inputs/"
+TABLE_TAG = ""              # suffixe des tables d'estimation lues : "" = tab_<BASE>_rd_dir_CI.xlsx | "_finetune" = avec effets fixes par année (tendance) | "_scaled"
 OUT_SUFFIX = ""             # par exemple "_test" -> beta_test.csv, pour ne pas écraser les fichiers utilisés par le choc
 
 COEFS = {2: {"file": "beta.csv", "cols": {"beta_D": "(2) rd_D", "beta_F": "(2) rd_F"}},
@@ -47,9 +50,9 @@ COEFS = {2: {"file": "beta.csv", "cols": {"beta_D": "(2) rd_D", "beta_F": "(2) r
                                                   "beta_diff_same": "(4) diff_same", "beta_diff_diff": "(4) diff_diff"}}}
 
 
-def table_path(base, content):
+def table_path(base, content, tag=TABLE_TAG):
     kind = {"dir": "rd_dir", "tot": "rd_embod"}[content]
-    return PATH_WRK + f"runs/SRDQ (c,s)/estimation_results/{base}/tab_{base}_{kind}_CI.xlsx"
+    return PATH_WRK + f"runs/SRDQ (c,s)/estimation_results/{base}/tab_{base}_{kind}_CI{tag}.xlsx"
 
 
 def parse(cell):
@@ -60,9 +63,9 @@ def parse(cell):
     return float(m.group(1)), (0 if m.group(2) == "ns" else len(m.group(2)))
 
 
-def load_tables(bases, content, tables=None):
+def load_tables(bases, content, tables=None, tag=TABLE_TAG):
     tables = tables or {}
-    paths = {b: tables.get(b) or table_path(b, content) for b in bases}
+    paths = {b: tables.get(b) or table_path(b, content, tag) for b in bases}
     missing = [f"{b}: {p}" for b, p in paths.items() if not os.path.exists(p)]
     if missing:
         raise FileNotFoundError("tables not found (remove the base with --bases, or give its path with --table BASE=path):\n  "
@@ -94,6 +97,7 @@ def main(argv=None):
     ap.add_argument("--models", type=int, nargs="+", choices=sorted(COEFS), default=MODELS, help="model(s) to build (2, 3, 4)")
     ap.add_argument("--bases", nargs="+", default=BASES, help="bases used for the median")
     ap.add_argument("--content", choices=["dir", "tot"], default=CONTENT, help="dir: rd_dir_CI tables, tot: rd_embod_CI tables")
+    ap.add_argument("--tag", default=TABLE_TAG, help="suffix of the estimation tables read: '' (reference), _finetune (year fixed effects = trend), _scaled")
     ap.add_argument("--min-stars", type=int, choices=[0, 1, 2, 3], default=MIN_STARS, help="0 all, 1 = 10 %%, 2 = 5 %%, 3 = 1 %%")
     ap.add_argument("--min-bases", type=int, default=MIN_BASES, help="min number of significant bases, otherwise beta = --fill")
     ap.add_argument("--stat", choices=["median", "mean"], default=STAT)
@@ -109,10 +113,10 @@ def main(argv=None):
     bound = lambda x: None if str(x).lower() == "none" else float(x)
     upper, lower = bound(a.upper), bound(a.lower)
     tables = dict(t.split("=", 1) for t in a.table)
-    tabs, sectors = load_tables(a.bases, a.content, tables)
+    tabs, sectors = load_tables(a.bases, a.content, tables, a.tag)
     os.makedirs(a.out_dir, exist_ok=True)
 
-    print(f"bases: {a.bases} | content: {a.content} | {a.stat} of the coefficients with >= {a.min_stars} star(s), "
+    print(f"bases: {a.bases} | content: {a.content} | tables tag: {a.tag!r} | {a.stat} of the coefficients with >= {a.min_stars} star(s), "
           f">= {a.min_bases} base(s) | bounds: lower={lower}, upper={upper} | fill={a.fill}")
     for model in a.models:
         betas, diag = build_beta(model, tabs, sectors, a.min_stars, a.min_bases, a.stat, upper, lower, a.fill)

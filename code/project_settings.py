@@ -1,4 +1,4 @@
-PATH_WRK = "C:/Users/oscar/Desktop/ENTICE_estimation/"
+PATH_WRK = "D:/ENTICE/"
 BASE = "GTAP" # EXIOBASE, FIGARO, OECD_ICIO, CAPITAL, GTAP, FDI, or Patents_Citation
 VERSION_EXIO = "3.11.2" # EXIOBASE version to download, used only if BASE == 'EXIOBASE'
 METRIC_WANTED = "dir" # dir or embod or embod_investment
@@ -104,4 +104,4 @@ RESULTS_DIR = PATH_WRK + f"runs/{RUN_DIR}{CHOC_TAG}/"           # everything pro
 #   panel_estimation/ (calc_blocs)  panels/ (création_panel_F)  tableaux/ (est_all_bases)  graphs/  graphs_output/
 
 _code = PATH_WRK + "code/"
-PANEL_CODE_DIR = _code + [d for d in os.listdir(_code) if d.startswith("cr") and "panel" in d][0] + "/"   # accent-safe folder
+PANEL_CODE_DIR = _code + "panel_estimation/"

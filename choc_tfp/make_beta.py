@@ -49,7 +49,7 @@ COEFS = {2: {"file": "beta.csv", "cols": {"beta_D": "(2) rd_D", "beta_F": "(2) r
 
 def table_path(base, content):
     kind = {"dir": "rd_dir", "tot": "rd_embod"}[content]
-    return PATH_WRK + f"runs/SRDQ (c,s)/tableaux/{base}/tab_{base}_{kind}_CI.xlsx"
+    return PATH_WRK + f"runs/SRDQ (c,s)/estimation_results/{base}/tab_{base}_{kind}_CI.xlsx"
 
 
 def parse(cell):

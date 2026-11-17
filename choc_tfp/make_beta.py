@@ -37,12 +37,12 @@ CONTENT = "dir"             # "dir" : rd_dir_CI | "tot" : rd_embod_CI
 MIN_STARS = 1               # 0 = tous les coefficients, 1 = significatif à 10 % ou mieux, 2 = 5 %, 3 = 1 %
 MIN_BASES = 1               # nombre minimum de bases significatives, sinon beta = FILL
 STAT = "median"             # "median" ou "mean" des coefficients retenus
-UPPER = None                # borne haute (un beta positif est ramené à 0) ; None = pas de borne
-LOWER = None                # borne basse ; None = pas de borne
+UPPER = 0.0                 # borne haute (un beta positif est ramené à 0) ; None = pas de borne
+LOWER = -0.25               # borne basse ; None = pas de borne
 FILL = 0.0                  # valeur quand pas assez de bases significatives
 OUT_DIR = PATH_WRK + "choc_tfp/inputs/"
-TABLE_TAG = ""              # suffixe des tables d'estimation lues : "" = tab_<BASE>_rd_dir_CI.xlsx | "_finetune" = avec effets fixes par année (tendance) | "_scaled"
-OUT_SUFFIX = ""             # par exemple "_test" -> beta_test.csv, pour ne pas écraser les fichiers utilisés par le choc
+TABLE_TAG = "_finetune"              # suffixe des tables d'estimation lues : "" = tab_<BASE>_rd_dir_CI.xlsx | "_finetune" = avec effets fixes par année (tendance) | "_scaled"
+OUT_SUFFIX = "_tendance_borne"             # par exemple "_test" -> beta_test.csv, pour ne pas écraser les fichiers utilisés par le choc
 
 COEFS = {2: {"file": "beta.csv", "cols": {"beta_D": "(2) rd_D", "beta_F": "(2) rd_F"}},
          3: {"file": "beta_modele3.csv", "cols": {"beta_X": "(3) rd_X", "beta_I": "(3) rd_I"}},

@@ -4,7 +4,7 @@ Python notebooks for constructing R&D knowledge measures, preparing country–se
 
 The project combines R&D expenditure and knowledge stocks with input–output tables, capital-use matrices, patent citations, or foreign direct investment data. The regression notebooks estimate **unit cost equations**; the historical name `choc_tfp` also appears in the subsequent cost-shock calculations.
 
-This guide describes the repository as inspected on **20 November 2026**. Some inputs are local research datasets and are not distributed here. Installing the Python environment does not by itself make the full pipeline runnable; see [Required data](#required-data) and [Current setup issues](#current-setup-issues).
+For the local research datasets used by the notebooks, see [Required data](#required-data).
 
 **Navigation:** [Layout](#repository-layout) · [Installation](#install-and-activate-the-environment) · [Configuration](#configure-a-run) · [Data](#required-data) · [Estimation pipeline](#run-the-estimation-pipeline) · [Shocks](#trade-scenarios-and-cost-shocks) · [Outputs](#where-outputs-are-stored) · [Troubleshooting](#updating-the-project-and-troubleshooting)
 
@@ -28,7 +28,7 @@ Terms used below: **R&D** = research and development; **MRIO** = multi-regional 
 | `Pipfile`, `Pipfile.lock` | Python requirement and dependency versions. |
 | `code/project_settings.py` | Central configuration: project root, database, years, R&D dimension, and run paths. |
 | `code/know_calc_loop.ipynb` | Constructs annual knowledge matrices and auxiliary trade/production tables. |
-| `code/panel_estimation/prépa_va_STAN.ipynb` | Prepares STAN economic variables and own R&D intensity. Requires local inputs and path adjustments described below. |
+| `code/panel_estimation/prépa_va_STAN.ipynb` | Prepares STAN economic variables and own R&D intensity. Run once for the databases that share these inputs. |
 | `code/panel_estimation/panel_setup.ipynb` | Current combined workflow: common mapping, knowledge-channel decomposition, and final regression panels. |
 | `code/panel_estimation/estimation_notebooks/` | Reference, fine-tuned, and scaled regressions. |
 | `code/graphs/` | Knowledge decomposition, estimated coefficients, and shock figures. |
@@ -57,13 +57,7 @@ python --version
 
 Check that `python --version` reports **3.13.x**, as required by both dependency files. If it points to another Python installation, select the 3.13 interpreter before continuing.
 
-For an environment stored inside the project, first add this line to `.gitignore` — it is missing from the current file:
-
-```gitignore
-.venv/
-```
-
-Then, from the repository root and outside any other activated virtual environment:
+From the repository root, open a Git Bash session and create the environment in `.venv/`:
 
 ```bash
 python -m pip install --user pipenv
@@ -142,7 +136,7 @@ Edit **`code/project_settings.py`**, not the numbered historical copy.
 | `PATH_WRK` | Absolute project root, e.g. `"D:/ENTICE_estimation/"`. **Keep the trailing `/`**: several paths use string concatenation. |
 | `BASE` | One database per run: `EXIOBASE`, `FIGARO`, `GTAP`, `OECD_ICIO`, `CAPITAL`, `FDI`, or `Patents_Citation`. |
 | `YEARS` | Requested observation years. Choose years supported by all inputs needed for that database. |
-| `VERSION_EXIO` | EXIOBASE download version. It is passed to the EXIOBASE loader for CAPITAL as well; check compatibility with its mapping and Kbar data. |
+| `VERSION_EXIO` | EXIOBASE edition used for the EXIOBASE tables in both EXIOBASE and CAPITAL runs. |
 | `RD_UNIT` | `"volume"` → RDQ/SRDQ, constant prices; `"value"` → RDV/SRDV, current prices. |
 | `DIMENSION` | `"(c,s)"` for country × sector, or `"(c,s,t)"` to add technology. |
 | `TECHS`, `TECH` | Matrix generation processes `TECHS`; downstream panels/estimations select one `TECH` at a time. The technology data are restricted to 2000–2021 and their available sectors. |
@@ -167,7 +161,7 @@ After changing settings, save the file and restart/re-run notebooks from their i
 | CAPITAL | EXIOBASE plus `data_raw/all_kbar/Kbar_exio_v3_8_2_{year}_cfc_pxi.mat`. Missing Kbar files are requested from Zenodo record 7073276. Check year/version availability; a 404 means that requested file was not found. |
 | FDI | `data_raw/data_FDI/fdi_158_65.har`. Direction is selected by `FDI_DIRECTION`; outward and inward measures intentionally use different transfer mechanisms, normalisations, and layouts. |
 | Patent citations | CSV under `data_raw/data_Patents_Citation/`, named in `PATHS["citation"]`. |
-| STAN and exchange-rate inputs | Obtain the local files read by `prépa_va_STAN.ipynb`; these are not included under `DATA/`. See the path adjustments below. |
+| STAN and exchange-rate inputs | Provide the STAN and exchange-rate files used by `prépa_va_STAN.ipynb` when preparing the shared intermediate tables. |
 | NEMESIS scenarios | Supply the IAMC-format CSV expected by `make_omega.py`, or pass its path explicitly. Existing small omega/beta files do not replace the full scenario input. |
 
 The effective year coverage is the intersection of R&D, source database, capital/citation/FDI inputs where relevant, and STAN coverage. The global `YEARS` list is not a guarantee that every source supports every year. The matrix notebook deletes some download/parsing folders after use; keep irreplaceable source files outside those temporary folders.
@@ -211,8 +205,6 @@ Run `code/panel_estimation/prépa_va_STAN.ipynb` if the intermediate files do n
 - `intensite_propre.csv`: own annual R&D expenditure and production, used to construct own R&D intensity.
 
 All three must be available in **`code/panel_estimation/Panels_intermediaires/`** for the current downstream notebooks. This preparation is shared across databases and estimation variants.
-
-**Adjust this notebook before its first run on a fresh clone:** it still reads/writes some paths under the old `code/création_panel_estimation/` folder. Its first two exports are relative to the kernel working directory. Use explicit paths under `PANEL_CODE_DIR` for the new `DATA/` and `Panels_intermediaires/` folders, create the output directory, and check `RD_FILE`, which currently expects `RDV (c,s).csv` rather than the checked-in `_new_1995_2022` filename. Verify columns and units before substituting an input.
 
 ### 3. Build the regression panel
 
@@ -342,16 +334,6 @@ The central settings derive separate source and result roots. For the common bas
 `value` changes `SRDQ` to `SRDV`. Technology runs add `/{TECH}` beneath `SRDQ (c,s,t)` or `SRDV (c,s,t)` in both source and run paths. Shock-panel settings add `_chocA` or `_chocB` to the results run path; print `SRC_DIR` and `RESULTS_DIR` to confirm the effective locations.
 
 Reference estimation tables have an empty variant suffix; alternatives use `_finetune` and `_scaled`. Repeating the same selections overwrites the same filenames. Keep the configuration, data editions, estimation suffix, and shock suffix with any results you share.
-
-## Current setup issues
-
-These are observed behaviors in this revision, rather than steps performed automatically by the README:
-
-| Issue | Action |
-| --- | --- |
-| STAN preparation still references the old code folder and a different R&D filename. | Align its input/output paths with `code/panel_estimation/` and provide the required local datasets before running it. |
-| `VERSION_EXIO` controls the EXIOBASE download for both EXIOBASE and CAPITAL. | Match the requested edition to the selected mapping and Kbar inputs; changing BASE does not automatically select another EXIOBASE edition. |
-| `.venv/` is not ignored yet. | Add it before staging project files. `.gitignore` also does not remove files already tracked by Git. |
 
 ## Updating the project and troubleshooting
 

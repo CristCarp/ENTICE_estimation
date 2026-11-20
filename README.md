@@ -4,7 +4,7 @@ Python notebooks for constructing R&D knowledge measures, preparing country–se
 
 The project combines R&D expenditure and knowledge stocks with input–output tables, capital-use matrices, patent citations, or foreign direct investment data. The regression notebooks estimate **unit cost equations**; the historical name `choc_tfp` also appears in the subsequent cost-shock calculations.
 
-This guide describes the repository as inspected on **20 November 2026**. Some inputs are local research datasets and are not distributed here. Installing the Python environment does not by itself make the full pipeline runnable; see [Required data](#required-data) and [Current setup issues](#current-setup-issues).
+This guide describes the repository as inspected on **20 November 2026**. Some inputs are local research datasets and are not distributed here. Installing the Python environment does not by itself make the full pipeline runnable; see [Required data](#required-data).
 
 **Navigation:** [Layout](#repository-layout) · [Installation](#install-and-activate-the-environment) · [Configuration](#configure-a-run) · [Data](#required-data) · [Estimation pipeline](#run-the-estimation-pipeline) · [Shocks](#trade-scenarios-and-cost-shocks) · [Outputs](#where-outputs-are-stored) · [Troubleshooting](#updating-the-project-and-troubleshooting)
 
@@ -343,15 +343,6 @@ The central settings derive separate source and result roots. For the common bas
 
 Reference estimation tables have an empty variant suffix; alternatives use `_finetune` and `_scaled`. Repeating the same selections overwrites the same filenames. Keep the configuration, data editions, estimation suffix, and shock suffix with any results you share.
 
-## Current setup issues
-
-These are observed behaviors in this revision, rather than steps performed automatically by the README:
-
-| Issue | Action |
-| --- | --- |
-| STAN preparation still references the old code folder and a different R&D filename. | Align its input/output paths with `code/panel_estimation/` and provide the required local datasets before running it. |
-| `VERSION_EXIO` controls the EXIOBASE download for both EXIOBASE and CAPITAL. | Match the requested edition to the selected mapping and Kbar inputs; changing BASE does not automatically select another EXIOBASE edition. |
-| `.venv/` is not ignored yet. | Add it before staging project files. `.gitignore` also does not remove files already tracked by Git. |
 
 ## Updating the project and troubleshooting
 

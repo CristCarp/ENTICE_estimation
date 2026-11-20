@@ -1,23 +1,22 @@
 PATH_WRK = "D:/ENTICE/"
 BASE = "GTAP" # EXIOBASE, FIGARO, OECD_ICIO, CAPITAL, GTAP, FDI, or Patents_Citation
-VERSION_EXIO = "3.11.2" # EXIOBASE version to download, used only if BASE == 'EXIOBASE'
-METRIC_WANTED = "dir" # dir or embod or embod_investment
-MODELES = ["all"] # None, faible, or forte
+VERSION_EXIO = "3.11.2" # EXIOBASE download version, also used by the CAPITAL IOT loader; check edition/mapping compatibility.
+METRIC_WANTED = "dir" # Measure selected for estimation: dir, embod, or CAPITAL-only embod_investment; not ALL.
+MODELES = ["all"] # Full sample; the current estimation notebooks do not use the former low/high-intensity subsets.
 YEARS = [1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,
  2014,2015,2016,2017,2018,2019,2020,2021,2022]
 # [1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,
 # 2014,2015,2016,2017,2018,2019,2020,2021,2022]
 
-# FDI channel (BASE = "FDI"): direction of the knowledge transfer. The FDIP matrix gives, for each investing country, the share of its
-# investment located in each (host region, host sector). Both metrics are written with the same layout: rows = (Region, Sector) of the HOST,
-# columns = investing country.
-#   "outwards": FDIs outwards. The investor receives the R&D of the places where it invests: R&D stock of the host (region, sector) x
-#               share of the investor's FDI located there. The investor has no sector dimension. File rd_dir_fdips_*.csv (what the program
-#               computed until now).
-#   "inwards" : FDIs inwards. R&D transmitted by the investor to the host (region, sector): share of the investor's FDI located there x
-#               R&D stock of the SAME sector s in the investing country. The FDI data have no investor sector, so the investor is assumed
-#               to transmit the R&D of the sector it invests in. File rd_dir_fdips_inwards_*.csv.
-#   "both"    : the two files.
+# FDI channel (BASE = "FDI"): the directions describe different knowledge-transfer mechanisms.
+#   "outwards": the investor receives host-country/sector knowledge, weighted by the
+#               destination's share in its FDI portfolio. Rows = host (Region, Sector);
+#               columns = investing country, without an investor-sector dimension.
+#   "inwards" : the investor transfers knowledge of the same sector to host countries
+#               (horizontal-FDI assumption), with weights normalised within investor/sector.
+#               Rows = investor (Region, Sector); columns = host (Region, Sector).
+#               Domestic positions are excluded by the metric function's default.
+#   "both"    : write both distinct measures. Their normalisations and layouts differ by design.
 FDI_DIRECTION = "both"
 if FDI_DIRECTION not in ("outwards", "inwards", "both"):
     raise ValueError(f"FDI_DIRECTION must be 'outwards', 'inwards' or 'both', got {FDI_DIRECTION!r}")
@@ -42,27 +41,28 @@ METRIC = METRIC_SPE[f"{BASE}_{METRIC_WANTED}"]
 
 # ============================================================
 # R&D DATA AND TECHNOLOGY DIMENSION
-# Used by know_calc_loop4.0 and by the programs that follow it (aggregate_to_common_mapping2.0, calc_blocs2.0,
-# création_panel_F2.0, est_all_bases4.0, graph_final_results3.0, graphs_output_general2.0).
+# Used by know_calc_loop, panel_setup, the estimation notebooks, and the graph notebooks.
 # ============================================================
 RD_UNIT = "volume"        # "value" -> RDV files (current prices, SRDV) | "volume" -> RDQ files (2020 prices, SRDQ)
 DIMENSION = "(c,s)"      # "(c,s)" without technology | "(c,s,t)" with technology
-# What know_calc_loop4.0 writes for each metric: "matrix" (origin x destination), "vector" (R&D received by each destination
-# (Region, Sector), whatever its origin: sum of the matrix over the origins), or both: ("matrix", "vector").
-# The programs after the aggregation (calc_blocs2.0, ...) read the matrices: keep "matrix" to run the whole chain.
+# What know_calc_loop writes: "matrix" (origin x destination), "vector" (column totals,
+# one per destination, with the identifiers appropriate to each measure), or both.
+# panel_setup needs matrices to retain country/sector origin detail; keep "matrix".
+# For CAPITAL, panel_setup includes direct, supply-chain, and investment channels together.
 OUTPUT_TYPE = ("matrix", "vector")
-# Technologies computed by know_calc_loop4.0 when DIMENSION == "(c,s,t)": list of codes / patterns ("TG*" = every code starting
-# with TG), or dict {name: [codes]} to group codes. 3 codes are advised (each one is a full pass of the metrics).
+# Technologies computed by know_calc_loop when DIMENSION == "(c,s,t)": list of codes/patterns
+# ("TG*" = every code starting with TG), or dict {name: [codes]} to group codes.
+# Each selected technology produces its own knowledge outputs; source tables are shared within a year.
 TECHS = ["TJ11", "TJ07", "TJ01"]
-# Technology analysed by calc_blocs / création_panel / estimation / graphs (one name of TECHS, or the key of the dict).
+# Technology analysed by panel_setup / estimation / graphs (one sanitised TECHS label or dictionary key).
 # One technology at a time: change it and run the chain again to analyse another one.
 TECH = "TJ11"
 
-# ---- import shock (choc_tfp3.0) ---------------------------------------------------------------------------------------
-# CHOC = False : the programs after the aggregation (calc_blocs2.0, création_panel_F2.0, est_all_bases4.0, graph_final_results3.0)
-#                use the baseline matrices (..._agg.csv) and write in runs/<run>/
-# CHOC = True  : they use the matrices with the shock made by choc_tfp3.0 (..._agg_choc.csv) and write in runs/<run>_choc<scenario>/,
-#                so the baseline results are never overwritten. Needs an MRIO base (EXIOBASE, FIGARO, OECD_ICIO or GTAP).
+# ---- baseline versus pre-shocked matrix inputs -------------------------------------------------------
+# CHOC = False: panel_setup and estimators read baseline *_agg.csv matrices and write to runs/<run>/.
+# CHOC = True: they expect separately prepared *_agg_choc.csv matrices and write to runs/<run>_choc<case>/.
+# The current choc_tfp/choc_horizon notebooks calculate cost effects; they do not create those shocked matrix files.
+# For their usual baseline-input workflow, keep CHOC = False. Cases A/B are distinct from NEMESIS scenario names.
 CHOC = False
 CHOC_SCENARIO = "B"      # scenario of the shocked matrices: "A" (no substitution) | "B" (domestic production fills the gap)
 
@@ -73,7 +73,7 @@ import re
 
 def _tech_labels(techs):
     keys = list(techs.keys()) if isinstance(techs, dict) else list(techs)
-    return [re.sub(r"[^A-Za-z0-9_+-]+", "x", str(k)) for k in keys]   # same rule as tech_specs() of know_calc_loop4.0
+    return [re.sub(r"[^A-Za-z0-9_+-]+", "x", str(k)) for k in keys]   # Same sanitising rule as tech_specs() in know_calc_loop.
 
 
 if RD_UNIT not in ("value", "volume"):
@@ -87,7 +87,7 @@ if CHOC_SCENARIO not in ("A", "B"):
     raise ValueError(f"CHOC_SCENARIO must be 'A' or 'B', got {CHOC_SCENARIO!r}")
 if CHOC and BASE not in ("EXIOBASE", "FIGARO", "OECD_ICIO", "GTAP"):
     raise ValueError(f"CHOC = True needs an MRIO base (EXIOBASE, FIGARO, OECD_ICIO or GTAP), got BASE={BASE!r}")
-AGG_SUFFIX = "_agg_choc" if CHOC else "_agg"                  # suffix of the matrices read by calc_blocs2.0
+AGG_SUFFIX = "_agg_choc" if CHOC else "_agg"                  # Suffix of the matrices read by panel_setup.
 CHOC_TAG = f"_choc{CHOC_SCENARIO}" if CHOC else ""            # suffix of the results folder
 
 TECH_LABELS = _tech_labels(TECHS) if DIMENSION == "(c,s,t)" else []
@@ -96,12 +96,12 @@ if DIMENSION == "(c,s,t)":
         raise ValueError(f"TECH={TECH!r} is not one of the technologies of TECHS: {TECH_LABELS}")
     YEARS = [y for y in YEARS if 2000 <= y <= 2021]   # the (c,s,t) files cover 2000-2021 only
 
-OUTPUT_ROOT = ("SRDV" if RD_UNIT == "value" else "SRDQ") + f" {DIMENSION}"   # folder written by know_calc_loop4.0
+OUTPUT_ROOT = ("SRDV" if RD_UNIT == "value" else "SRDQ") + f" {DIMENSION}"   # Matrix-output root written by know_calc_loop.
 RUN_DIR = OUTPUT_ROOT + (f"/{TECH}" if DIMENSION == "(c,s,t)" else "")        # one folder per technology in (c,s,t)
-SRC_DIR = PATH_WRK + RUN_DIR + "/"                    # where the know_calc_loop4.0 results of the analysed run are
+SRC_DIR = PATH_WRK + RUN_DIR + "/"                    # Knowledge-matrix directory of the selected run.
 SRC_DIRS = ([PATH_WRK + f"{OUTPUT_ROOT}/{t}/" for t in TECH_LABELS] if DIMENSION == "(c,s,t)" else [PATH_WRK + OUTPUT_ROOT + "/"])
 RESULTS_DIR = PATH_WRK + f"runs/{RUN_DIR}{CHOC_TAG}/"           # everything produced after the aggregation, one tree per run:
-#   panel_estimation/ (calc_blocs)  panels/ (création_panel_F)  tableaux/ (est_all_bases)  graphs/  graphs_output/
+#   know_panels/  regression_panels/  estimation_results/<BASE>/  graphs/  choc_tfp/
 
 _code = PATH_WRK + "code/"
 PANEL_CODE_DIR = _code + "panel_estimation/"

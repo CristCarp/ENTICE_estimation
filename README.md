@@ -165,7 +165,7 @@ After changing settings, save the file and restart/re-run notebooks from their i
 | OECD ICIO | Local annual CSVs at `data_raw/data_OECD_ICIO/2016-2022_EXT/{year}.csv`. |
 | GTAP | The active parser reads `data_raw/V12APOW/V12APOW_MRIO_{period}/`. It uses benchmark periods 2004, 2007, 2011, 2014, 2017, 2019, and 2023 according to the requested year. The `PATHS["gtap_folder"]` entry currently names a different, unused location. |
 | CAPITAL | EXIOBASE plus `data_raw/all_kbar/Kbar_exio_v3_8_2_{year}_cfc_pxi.mat`. Missing Kbar files are requested from Zenodo record 7073276. Check year/version availability; a 404 means that requested file was not found. |
-| FDI | `data_raw/data_FDI/fdi_158_65.har`. Direction is selected by `FDI_DIRECTION`; outward and inward measures have different destination layouts and are not interchangeable. |
+| FDI | `data_raw/data_FDI/fdi_158_65.har`. Direction is selected by `FDI_DIRECTION`; outward and inward measures intentionally use different transfer mechanisms, normalisations, and layouts. |
 | Patent citations | CSV under `data_raw/data_Patents_Citation/`, named in `PATHS["citation"]`. |
 | STAN and exchange-rate inputs | Obtain the local files read by `prépa_va_STAN.ipynb`; these are not included under `DATA/`. See the path adjustments below. |
 | NEMESIS scenarios | Supply the IAMC-format CSV expected by `make_omega.py`, or pass its path explicitly. Existing small omega/beta files do not replace the full scenario input. |
@@ -190,7 +190,7 @@ CAPITAL has three separate metric keys:
 | `rd_embod_CAPITAL` | Capital embodied **supply-chain**, using the inverse extended to intermediate and capital coefficients. |
 | `rd_embod_investment_CAPITAL` | Capital embodied **investment**, using the ordinary intermediate-input Leontief inverse before applying the capital-use matrix. |
 
-**Currently, `METRICS_WANTED = "ALL"` does not include CAPITAL investment.** To generate all three, use an explicit list in the matrix notebook:
+**`METRICS_WANTED = "ALL"` includes all three CAPITAL measures.** An explicit list is also available when you want to select outputs:
 
 ```python
 METRICS_WANTED = [
@@ -224,7 +224,7 @@ Run `code/panel_estimation/panel_setup.ipynb`. It replaces the former three sepa
 | Knowledge panel | Splits incoming knowledge into same/other sector × same/other country channels, and attaches available trade and production variables. |
 | Final panel | Adds broad sectors, merges STAN variables, constructs knowledge aggregates and controls, and merges own R&D intensity. |
 
-For physical databases, **direct and embodied channels are built together**. Their input matrices must both exist; there is no need to rerun the whole panel notebook just to switch between them in an estimation. For CAPITAL, select `METRIC_WANTED = "embod_investment"` when building the panel to include the third channel alongside the other two. Keep that enriched panel for subsequent CAPITAL estimations.
+For physical databases, **direct and embodied channels are built together**. Their input matrices must both exist; there is no need to rerun the whole panel notebook just to switch between them in an estimation. For CAPITAL, the panel always loads all three measures, regardless of `METRIC_WANTED`; all three source matrices must exist for each selected year. `METRIC_WANTED` still selects the accessible-knowledge intensity and the subsequent estimation. Do not set this singular selector to `"ALL"`: it is a single metric key used by the estimators.
 
 The final file is `RESULTS_DIR/regression_panels/panel_{BASE}_F.csv`. `know_panels/` holds an earlier construction stage; it is not the estimation input. Re-running the notebook replaces the selected run/base's panel files.
 
@@ -318,7 +318,7 @@ Horizon CSVs are written directly under `RESULTS_DIR/choc_tfp/`, including:
 - `ENTICE_T34_{BASE}-{CONTENT}_AllCases_{scenario}{suffix}.csv` — final IAMC-style percentage export.
 - A `_comparaison_VA.csv` export comparing aggregate results with/without value-added weighting. This part also requires `panel_va_STAN.csv`.
 
-Then run the horizon-comparison cells in `code/graphs/graph_choc.ipynb`. They read these suffixes, skip unavailable versions, and use a common vertical scale. Older names such as `choc_horizon_5.2` in comments refer to the current unversioned horizon notebook.
+Then run the horizon-comparison cells in `code/graphs/graph_choc.ipynb`. They read these suffixes, skip unavailable versions, and use a common vertical scale. Instructions refer to the current unversioned `choc_horizon.ipynb` notebook.
 
 `choc_tfp/choc_tfp.ipynb` is the separate **single-year** workflow using `omega.csv` and unsuffixed beta files. It writes `resultats{model}_blocs_{BASE}_{CONTENT}_{YEAR}_choc{case}.csv` under `RESULTS_DIR/choc_tfp/{BASE}/`. Do not confuse this location with horizon outputs.
 
@@ -350,10 +350,7 @@ These are observed behaviors in this revision, rather than steps performed autom
 | Issue | Action |
 | --- | --- |
 | STAN preparation still references the old code folder and a different R&D filename. | Align its input/output paths with `code/panel_estimation/` and provide the required local datasets before running it. |
-| CAPITAL investment is absent from the `"ALL"` metric list. | Generate it explicitly; build the enriched CAPITAL panel with `METRIC_WANTED = "embod_investment"`. |
-| Some comments describe different defaults than the executed code. | Check assignments: fine-tuned covariance currently uses `"clustered"`; beta generation currently defaults to `_finetune` tables and `_tendance_borne` outputs. |
-| `VERSION_EXIO` also controls the EXIOBASE download for CAPITAL. | Match the requested edition to the CAPITAL/Kbar mapping; do not rely on the settings comment saying it only affects EXIOBASE. |
-| FDI directions have different layouts, while panel setup selects `FDI_dir` → `rd_dir_fdips`. | Inspect the selected direction and panel parser before treating inward/outward outputs as interchangeable estimation inputs. |
+| `VERSION_EXIO` controls the EXIOBASE download for both EXIOBASE and CAPITAL. | Match the requested edition to the selected mapping and Kbar inputs; changing BASE does not automatically select another EXIOBASE edition. |
 | `.venv/` is not ignored yet. | Add it before staging project files. `.gitignore` also does not remove files already tracked by Git. |
 
 ## Updating the project and troubleshooting
@@ -373,7 +370,7 @@ If you have local edits, commit the intended files or save them before pulling; 
 | Missing matrix or empty `[] saved` message | Exact metric name, `METRICS_WANTED`, supported metric lists, base, year, unit, and technology. Auxiliary trade files can be saved even when no knowledge metric was selected. |
 | HTTP 404 during a download | Exact requested edition/year/filename. Retrying an unavailable file does not create it. |
 | MARIO aggregation rejects labels | Database edition and the Excel aggregation mapping must describe the same source classification. |
-| Missing `rd_embod_investment` column | Confirm investment matrices exist, then rebuild the enriched CAPITAL panel. |
+| Missing `rd_embod_investment` column | Confirm that all three CAPITAL matrices exist for each selected year, then rebuild the panel. |
 | Shock graph reports no files | Single-year outputs have a `{BASE}/` subfolder; horizon outputs do not. Also check scenario, year, model, and suffix. |
 | Entire notebook JSON appears inside one large notebook cell after an IDE update | A notebook is normally JSON **on disk**, but embedding the whole JSON inside one cell is different. Preserve the affected file and recover the notebook structure or a known-good Git revision. Simply changing the extension will not restore its cells. |
 

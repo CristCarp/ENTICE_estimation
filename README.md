@@ -218,6 +218,10 @@ Run `code/panel_estimation/panel_setup.ipynb`. It replaces the former three sepa
 
 For physical databases, **direct and embodied channels are built together**. Their input matrices must both exist; there is no need to rerun the whole panel notebook just to switch between them in an estimation. For CAPITAL, the panel always loads all three measures, regardless of `METRIC_WANTED`; all three source matrices must exist for each selected year. `METRIC_WANTED` still selects the accessible-knowledge intensity and the subsequent estimation. Do not set this singular selector to `"ALL"`: it is a single metric key used by the estimators.
 
+For FDI, set `BASE = "FDI"`, `METRIC_WANTED = "dir"` and the required `YEARS`. Run `panel_setup.ipynb` with the annual inward matrices (`rd_dir_fdips_inwards_FDI_{year}.csv`) produced by `know_calc_loop`. If generating those matrices, select `FDI_DIRECTION = "inwards"` or `"both"`. The inward columns identify recipient country–sector pairs. Outward columns identify the investing country only. The panel uses the inward stock alone. Fixed FDI portfolio weights imply that annual changes in this measure come from the R&D stocks.
+
+Then run `estimation_all_bases.ipynb`. For FDI, it reads `regression_panels/panel_FDI_F.csv` and writes specifications (1) and (5) to `estimation_results/FDI/tab_FDI_rd_dir_fdips_inwards.xlsx`. Specification (1) uses the log total inward stock. In this reference notebook, (5) uses its interaction with own R&D intensity in percentage points.
+
 The final file is `RESULTS_DIR/regression_panels/panel_{BASE}_F.csv`. `know_panels/` holds an earlier construction stage; it is not the estimation input. Re-running the notebook replaces the selected run/base's panel files.
 
 ### 4. Estimate the models

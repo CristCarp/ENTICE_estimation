@@ -1,5 +1,5 @@
 PATH_WRK = "D:/ENTICE/"
-BASE = "GTAP" # EXIOBASE, FIGARO, OECD_ICIO, CAPITAL, GTAP, FDI, or Patents_Citation
+BASE = "EXIOBASE" # EXIOBASE, FIGARO, OECD_ICIO, CAPITAL, GTAP, FDI, or Patents_Citation
 VERSION_EXIO = "3.11.2" # EXIOBASE download version, also used by the CAPITAL IOT loader; check edition/mapping compatibility.
 METRIC_WANTED = "dir" # Measure selected for estimation: dir, embod, or CAPITAL-only embod_investment; not ALL.
 MODELES = ["all"] # Full sample; the current estimation notebooks do not use the former low/high-intensity subsets.
@@ -20,6 +20,7 @@ YEARS = [1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2
 FDI_DIRECTION = "both"
 if FDI_DIRECTION not in ("outwards", "inwards", "both"):
     raise ValueError(f"FDI_DIRECTION must be 'outwards', 'inwards' or 'both', got {FDI_DIRECTION!r}")
+FDI_OUTWARD_YEARS = [2017]
 
 METRIC_SPE = {
     "EXIOBASE_dir": "rd_dir_CI",
@@ -33,7 +34,7 @@ METRIC_SPE = {
     "CAPITAL_dir": "rd_dir_CAPITAL",
     "CAPITAL_embod": "rd_embod_CAPITAL",
     "CAPITAL_embod_investment": "rd_embod_investment_CAPITAL",
-    "FDI_dir": "rd_dir_fdips",
+    "FDI_dir": "rd_dir_fdips_inwards",  # Sector panels use the inward stock by recipient country and sector.
     "Patents_Citation_dir": "rd_dir_cit"
 }
 METRIC = METRIC_SPE[f"{BASE}_{METRIC_WANTED}"]

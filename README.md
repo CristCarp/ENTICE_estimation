@@ -4,7 +4,7 @@ Python notebooks for constructing R&D knowledge measures, preparing country–se
 
 The project combines R&D expenditure and knowledge stocks with input–output tables, capital-use matrices, patent citations, or foreign direct investment data. The regression notebooks estimate **unit cost equations**; the historical name `choc_tfp` also appears in the subsequent cost-shock calculations.
 
-For the local research datasets used by the notebooks, see [Required data](#required-data).
+Some inputs are local research datasets and are not distributed here. Installing the Python environment does not by itself make the full pipeline runnable. For the datasets used by the notebooks, see [Required data](#required-data).
 
 **Navigation:** [Layout](#repository-layout) · [Installation](#install-and-activate-the-environment) · [Configuration](#configure-a-run) · [Data](#required-data) · [Estimation pipeline](#run-the-estimation-pipeline) · [Shocks](#trade-scenarios-and-cost-shocks) · [Outputs](#where-outputs-are-stored) · [Troubleshooting](#updating-the-project-and-troubleshooting)
 

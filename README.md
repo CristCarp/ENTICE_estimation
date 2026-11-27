@@ -218,7 +218,7 @@ Run `code/panel_estimation/panel_setup.ipynb`. It replaces the former three sepa
 | Knowledge panel | Splits incoming knowledge into same/other sector × same/other country channels, and attaches available trade and production variables. |
 | Final panel | Adds broad sectors, merges STAN variables, constructs knowledge aggregates and controls, and merges own R&D intensity. |
 
-For physical databases, **direct and embodied channels are built together**. Their input matrices must both exist; there is no need to rerun the whole panel notebook just to switch between them in an estimation. For CAPITAL, the panel always loads all three measures, regardless of `METRIC_WANTED`; all three source matrices must exist for each selected year. `METRIC_WANTED` still selects the accessible-knowledge intensity and the subsequent estimation. Do not set this singular selector to `"ALL"`: it is a single metric key used by the estimators.
+For physical databases, **direct and embodied channels are built together**. Their input matrices must both exist; there is no need to rerun the whole panel notebook just to switch between them in an estimation. For CAPITAL, the panel always loads all three measures, regardless of `METRIC_WANTED`; all three source matrices must exist for each selected year. `METRIC_WANTED` selects the accessible-knowledge intensity and the metric for single-measure workflows. The reference, fine-tuned and CCE notebooks estimate all supported measures in one **Run All**, including embodied investment for CAPITAL. Keep `METRIC_WANTED` set to a valid single measure.
 
 For FDI, set `BASE = "FDI"`, `METRIC_WANTED = "dir"` and the required `YEARS`. Run `panel_setup.ipynb` with the annual inward matrices (`rd_dir_fdips_inwards_FDI_{year}.csv`) produced by `know_calc_loop`. If generating those matrices, select `FDI_DIRECTION = "inwards"` or `"both"`. The inward columns identify recipient country–sector pairs. Outward columns identify the investing country only. The panel uses the inward stock alone. Fixed FDI portfolio weights imply that annual changes in this measure come from the R&D stocks.
 
@@ -298,15 +298,7 @@ The output is `shock_tfp/inputs/omega_nemesis_TariffsAndSub_grp1.csv`. Values ar
 
 ### Calculate and compare shocks
 
-For NEMESIS projections, run **`shock_tfp/shock_horizon.ipynb`** once per beta suffix, selecting:
-
-- `NEMESIS_SCENARIO`, e.g. `"TariffsAndSub_grp1"`.
-- `YEAR`: year of the baseline matrix; `YEARS_CALC`: projection years.
-- `CONTENT`: `"dir"` or `"tot"`; the latter reads `rd_tot_CI` matrices.
-- `MODELS`: e.g. `[2]` for domestic/foreign knowledge.
-- `CASES`: `"A"` for no substitution, `"B"` for domestic replacement, or both.
-- `BETA_SUFFIX`: `""`, `"_bounded"`, `"_trend"`, or `"_trend_bounded"` to match the generated parameters.
-- `SIMPLE`: sector totals only when `True`; totals plus supplying-bloc detail when `False` in the final IAMC export.
+For NEMESIS projections, open `shock_tfp/shock_horizon.ipynb` and use **Run All**. Set `NEMESIS_SCENARIO` to the family `Tariff` or `TariffsAndSub`, select `CASES` (A, B, C or a combination), and set `SIMPLE` to control bilateral detail in the final export. Model 1 runs groups 1 to 5 with the low, central and high calibrations and writes four CSV tables per combination. Case C uses the production files prepared by `make_prod.py`.
 
 This workflow supports EXIOBASE, FIGARO, OECD_ICIO, and GTAP. Case B needs intermediate-flow volumes (`z_CI`); check any fallback reconstruction and its reference year before interpreting the result. For `CONTENT = "tot"`, `make_beta.py` reads `rd_embod_CI` estimation tables while the shock uses supplier-indexed `rd_tot_CI`; check that this coefficient/origin convention is appropriate to the chosen specification.
 

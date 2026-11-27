@@ -32,7 +32,7 @@ import project_settings
 importlib.reload(project_settings)
 from project_settings import PATH_WRK
 
-NEMESIS_FILE = PATH_WRK + "choc_tfp/inputs/ENTICE_T42_NEMESIS-World_AllScenarios_20261109.xlsx - data.csv"
+NEMESIS_FILE = PATH_WRK + "shock_tfp/inputs/ENTICE_T42_NEMESIS-World_AllScenarios_20261109.xlsx - data.csv"
 CSV = dict(sep=",", decimal=",", encoding="utf-8-sig")       # format du fichier NEMESIS (decimale = virgule)
 OUT_DIR = Path(__file__).resolve().parent / "inputs"
 REF_PATTERN = "Refscen"                                      # le scenario de reference est celui dont le nom contient ce texte

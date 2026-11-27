@@ -1,10 +1,10 @@
 import re
 from pathlib import Path
 import pandas as pd
-from project_settings import PATH_WRK
+from project_settings import RAW_DIR, RD_DIR
 
-INPUT_DIR = Path(PATH_WRK)
-OUT_DIR = Path(PATH_WRK)
+INPUT_DIR = Path(RAW_DIR)         # raw BERD files (input/data_raw/)
+OUT_DIR = Path(RD_DIR)           # the R&D files made here go to input/R&D/
 SUFFIX = "_new"
 GRANULARITY = "55S"
 FILES = {
@@ -42,8 +42,8 @@ sector_order = {s: i for i, s in enumerate(dict.fromkeys(rdv["nace_code"]))}    
 df = df.sort_values(["year", "country_code", "nace_code"], key=lambda c: c.map(sector_order) if c.name == "nace_code" else c).reset_index(drop=True)
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-path_v = OUT_DIR / f"RDV (c,s){SUFFIX}.csv"
-path_q = OUT_DIR / f"RDQ (c,s){SUFFIX}.csv"
+path_v = OUT_DIR / f"RDV_c_s{SUFFIX}.csv"
+path_q = OUT_DIR / f"RDQ_c_s{SUFFIX}.csv"
 df[["year", "country_code", "nace_code", "rd_value_M€"]].to_csv(path_v, sep=",", index=False, encoding="utf-8")
 df[["year", "country_code", "nace_code", "rd_value_volume_M€"]].to_csv(path_q, sep=";", index=False, encoding="utf-8")
 

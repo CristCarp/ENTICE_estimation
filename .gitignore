@@ -5,13 +5,9 @@ __pycache__/
 .venv/
 
 # Données brutes et matrices
-data_raw/
-SRDQ*/
-SRDV*/
-Panels_intermediaires/
-Estimation steps [post know_calc_loop]/
-code/panel_estimation/DATA/
-choc_tfp/inputs/
+input/data_raw/
+output/
+legacy_estimation_steps/
+shock_tfp/inputs/
 
-# Résultats générés
-runs/
+# Résultats générés (output/ ci-dessus)

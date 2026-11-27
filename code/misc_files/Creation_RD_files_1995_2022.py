@@ -1,15 +1,15 @@
-"""Builds the R&D (c,s) files 1995-2022 from the two Eurostat PREDICT files (value, M euros, current prices):
+"""Builds the R&D c_s files 1995-2022 from the two Eurostat PREDICT files (value, M euros, current prices):
 
     56S : 20250816_BERD_from_EUROSTAT_PREDICT_56S_AVG_1_Year_FINAL_A518_AJ592_full.csv  (56 sectors of the project nomenclature)
     25S : 20250716_BERD_from_EUROSTAT_PREDICT_25S_completed_by_PATENTS_..._FINAL_C508_AJ533.csv  (25 manufacturing sectors + J62)
 
-Outputs (project root), same format as the "RDV (c,s).csv" / "RDQ (c,s).csv" files of the project:
-    RDV (c,s)_new_1995_2022.csv      year,country_code,nace_code,rd_value_M€            (current prices, separator ",")   <- 56S
-    RDQ (c,s)_new_1995_2022.csv      year;country_code;nace_code;rd_value_volume_M€     (constant 2020 prices, separator ";")
-    RDV (c,s)_new_1995_2022_25S.csv / RDQ (c,s)_new_1995_2022_25S.csv                                                       <- 25S
+Outputs (input/R&D/), same format as the "RDV_c_s_old.csv" / "RDQ_c_s_old.csv" files of the project:
+    RDV_c_s.csv                    year,country_code,nace_code,rd_value_M€            (current prices, separator ",")   <- 56S
+    RDQ_c_s.csv                    year;country_code;nace_code;rd_value_volume_M€     (constant 2020 prices, separator ";")
+    RDV_c_s_25S.csv / RDQ_c_s_25S.csv                                                                                   <- 25S
 
 The source files only contain values. The volume is value / price index, with the index pi(country, year) taken from the existing
-"RDV (c,s).csv" and "RDQ (c,s).csv" (pi = RDV / RDQ: identical for every sector of a country-year, equal to 1 in 2020). A country
+"RDV_c_s_old.csv" and "RDQ_c_s_old.csv" (pi = RDV / RDQ: identical for every sector of a country-year, equal to 1 in 2020). A country
 without index (Taiwan: its volumes are 0 in the existing RDQ) gets a volume of 0, as in the existing file.
 
 Run:  python Creation_RD_files_1995_2022.py
@@ -19,16 +19,16 @@ from pathlib import Path
 
 import pandas as pd
 
-from project_settings import PATH_WRK
+from project_settings import RAW_DIR, RD_DIR
 
-INPUT_DIR = Path(PATH_WRK)
-OUT_DIR = Path(PATH_WRK)
-SUFFIX = "_new_1995_2022"
+INPUT_DIR = Path(RAW_DIR)         # raw BERD files (input/data_raw/)
+OUT_DIR = Path(RD_DIR)           # the R&D files made here go to input/R&D/
+SUFFIX = ""
 SOURCES = {   # granularity -> (source file, suffix added to the output names)
     "56S": ("20250816_BERD_from_EUROSTAT_PREDICT_56S_AVG_1_Year_FINAL_A518_AJ592_full.csv", ""),
     "25S": ("20250716_BERD_from_EUROSTAT_PREDICT_25S_completed_by_PATENTS_avec_RD_1Y_et_BREV_3Y_FINAL_C508_AJ533.csv", "_25S"),
 }
-PRICE_INDEX_FILES = ("RDV (c,s).csv", "RDQ (c,s).csv")   # existing files giving the price index RDV / RDQ
+PRICE_INDEX_FILES = ("RDV_c_s_old.csv", "RDQ_c_s_old.csv")   # existing files giving the price index RDV / RDQ
 COL_V, COL_Q = "rd_value_M€", "rd_value_volume_M€"
 
 
@@ -37,9 +37,9 @@ def sector_name(code: str) -> str:
     return re.sub(r"^([A-Z])(\d+)T[A-Z]?(\d+)$", r"\1\2_\1\3", code)
 
 
-# ---- price index pi(country, year) = RDV / RDQ of the existing (c,s) files ---------------------------------------------------
-v_old = pd.read_csv(INPUT_DIR / PRICE_INDEX_FILES[0])
-q_old = pd.read_csv(INPUT_DIR / PRICE_INDEX_FILES[1], sep=";")
+# ---- price index pi(country, year) = RDV / RDQ of the existing c_s files ---------------------------------------------------
+v_old = pd.read_csv(OUT_DIR / PRICE_INDEX_FILES[0])
+q_old = pd.read_csv(OUT_DIR / PRICE_INDEX_FILES[1], sep=";")
 m = v_old.merge(q_old, on=["year", "country_code", "nace_code"])
 m = m[m[COL_Q] > 0]
 ratio = m[COL_V] / m[COL_Q]
@@ -71,8 +71,8 @@ for granularity, (file, out_suffix) in SOURCES.items():
               "leur R&D serait ignorée par le programme principal")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    path_v = OUT_DIR / f"RDV (c,s){SUFFIX}{out_suffix}.csv"
-    path_q = OUT_DIR / f"RDQ (c,s){SUFFIX}{out_suffix}.csv"
+    path_v = OUT_DIR / f"RDV_c_s{SUFFIX}{out_suffix}.csv"
+    path_q = OUT_DIR / f"RDQ_c_s{SUFFIX}{out_suffix}.csv"
     df[["year", "country_code", "nace_code", COL_V]].to_csv(path_v, sep=",", index=False, encoding="utf-8")
     df[["year", "country_code", "nace_code", COL_Q]].to_csv(path_q, sep=";", index=False, encoding="utf-8")
     print("   écrits :", path_v.name, "|", path_q.name)

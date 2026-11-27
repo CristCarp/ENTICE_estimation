@@ -1,4 +1,4 @@
-"""Builds the beta files used by the shock programs (choc_tfp3.0 / choc_tfp4.0) from the estimation tables tab_<BASE>_<content>_CI.xlsx.
+"""Builds the beta files used by the shock programs (shock_tfp3.0 / shock_tfp4.0) from the estimation tables tab_<BASE>_<content>_CI.xlsx.
 
 For each sector and each coefficient of the chosen model(s): the coefficients of the chosen bases are kept if they are significant
 (at least MIN_STARS stars), the median (or mean) of the kept ones is taken, then bounded (UPPER / LOWER). If fewer than MIN_BASES
@@ -6,16 +6,16 @@ bases are significant the beta is set to FILL.
 
 Output (in OUT_DIR, same format as before):
     model 2 -> beta.csv           (sector, beta_D, beta_F)
-    model 3 -> beta_modele3.csv   (sector, beta_X, beta_I)
-    model 4 -> beta_modele4.csv   (sector, beta_same_same, beta_same_diff, beta_diff_same, beta_diff_diff)
+    model 3 -> beta_model3.csv   (sector, beta_X, beta_I)
+    model 4 -> beta_model4.csv   (sector, beta_same_same, beta_same_diff, beta_diff_same, beta_diff_diff)
 
 Usage (everything has a default, edit the constants below or pass options):
     python make_beta.py
     python make_beta.py --models 2 4 --bases GTAP FIGARO --min-stars 2 --upper 0
     python make_beta.py --upper none --min-bases 2 --stat mean --out-dir test_beta/ --show
     python make_beta.py --table EXIOBASE=C:/chemin/tab_EXIOBASE_rd_dir_CI.xlsx
-    python make_beta.py --tag _finetune --suffix _tendance                 # tables with year fixed effects (tab_<BASE>_rd_dir_CI_finetune.xlsx)
-    python make_beta.py --tag _finetune --upper 0 --lower -0.25 --suffix _tendance_borne
+    python make_beta.py --tag _finetune --suffix _trend                 # tables with year fixed effects (tab_<BASE>_rd_dir_CI_finetune.xlsx)
+    python make_beta.py --tag _finetune --upper 0 --lower -0.25 --suffix _trend_bounded
 """
 import argparse
 import os
@@ -29,7 +29,7 @@ for p in ("../code", "code", "."):                      # project_settings.py es
     if os.path.exists(os.path.join(p, "project_settings.py")):
         sys.path.insert(0, os.path.abspath(p))
         break
-from project_settings import PATH_WRK
+from project_settings import PATH_WRK, OUTPUT_DIR
 
 MODELS = [2, 3, 4]
 BASES = ["EXIOBASE", "FIGARO", "OECD_ICIO", "GTAP"]
@@ -40,19 +40,19 @@ STAT = "median"             # "median" ou "mean" des coefficients retenus
 UPPER = 0.0                 # borne haute (un beta positif est ramené à 0) ; None = pas de borne
 LOWER = -0.25               # borne basse ; None = pas de borne
 FILL = 0.0                  # valeur quand pas assez de bases significatives
-OUT_DIR = PATH_WRK + "choc_tfp/inputs/"
+OUT_DIR = PATH_WRK + "shock_tfp/inputs/"
 TABLE_TAG = "_finetune"              # suffixe des tables d'estimation lues : "" = tab_<BASE>_rd_dir_CI.xlsx | "_finetune" = avec effets fixes par année (tendance) | "_scaled"
-OUT_SUFFIX = "_tendance_borne"             # par exemple "_test" -> beta_test.csv, pour ne pas écraser les fichiers utilisés par le choc
+OUT_SUFFIX = "_trend_bounded"             # par exemple "_test" -> beta_test.csv, pour ne pas écraser les fichiers utilisés par le choc
 
 COEFS = {2: {"file": "beta.csv", "cols": {"beta_D": "(2) rd_D", "beta_F": "(2) rd_F"}},
-         3: {"file": "beta_modele3.csv", "cols": {"beta_X": "(3) rd_X", "beta_I": "(3) rd_I"}},
-         4: {"file": "beta_modele4.csv", "cols": {"beta_same_same": "(4) same_same", "beta_same_diff": "(4) same_diff",
+         3: {"file": "beta_model3.csv", "cols": {"beta_X": "(3) rd_X", "beta_I": "(3) rd_I"}},
+         4: {"file": "beta_model4.csv", "cols": {"beta_same_same": "(4) same_same", "beta_same_diff": "(4) same_diff",
                                                   "beta_diff_same": "(4) diff_same", "beta_diff_diff": "(4) diff_diff"}}}
 
 
 def table_path(base, content, tag=TABLE_TAG):
     kind = {"dir": "rd_dir", "tot": "rd_embod"}[content]
-    return PATH_WRK + f"runs/SRDQ (c,s)/estimation_results/{base}/tab_{base}_{kind}_CI{tag}.xlsx"
+    return OUTPUT_DIR + f"results/SRDQ_c_s/estimation_results/{base}/tab_{base}_{kind}_CI{tag}.xlsx"
 
 
 def parse(cell):

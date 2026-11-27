@@ -6,7 +6,7 @@ import project_settings
 importlib.reload(project_settings)
 from project_settings import PATH_WRK, BASE, SRC_DIRS
 
-# folders written by know_calc_loop4.0: "SRDV (c,s)" / "SRDQ (c,s)", or one folder per technology of TECHS in (c,s,t)
+# folders written by know_calc_loop4.0: "SRDV_c_s" / "SRDQ_c_s", or one folder per technology of TECHS in c_s_t
 # (RD_UNIT, DIMENSION and TECHS are set in project_settings.py)
 OUT_DIRS = SRC_DIRS
 MAP_DIR = PATH_WRK + "mapping/final_aggregation"
@@ -22,7 +22,7 @@ MATRIX_PREFIXES = ["rd_dir_CI", "rd_embod_CI", "rd_imp_CI", "rd_tot_CI", "z_CI",
 ASYMMETRIC_PREFIXES = {"rd_dir_cit"}
 
 # "long" files Region[,Sector] + year columns, separator ";"
-# -> a single file (all years as columns), in SRDQ (c,s)/{base}/output_loop_{base}/
+# -> a single file (all years as columns), in SRDQ_c_s/{base}/output_loop_{base}/
 LONG_SECTOR_FILES = ["production_{base}.csv", "exports_{base}.csv", "imports_intermediate_{base}.csv"]
 
 # "long" files with no Sector column (Region + year columns only) -> no sector
@@ -118,7 +118,7 @@ def out_path(path):
 
 
 def is_already_aggregated(path):
-    return "_agg" in os.path.basename(path)   # _agg.csv and _agg_choc.csv are results of an aggregation
+    return "_agg" in os.path.basename(path)   # _agg.csv and _agg_shock.csv are results of an aggregation
 
 
 def run_base(base, out_dir):

@@ -2,7 +2,7 @@
 
 Python notebooks for constructing R&D knowledge measures, preparing country–sector panels, estimating unit cost equations, and calculating the cost effects of trade scenarios.
 
-The project combines R&D expenditure and knowledge stocks with input–output tables, capital-use matrices, patent citations, or foreign direct investment data. The regression notebooks estimate **unit cost equations**; the historical name `choc_tfp` also appears in the subsequent cost-shock calculations.
+The project combines R&D expenditure and knowledge stocks with input–output tables, capital-use matrices, patent citations, or foreign direct investment data. The regression notebooks estimate **unit cost equations**; the historical name `shock_tfp` also appears in the subsequent cost-shock calculations.
 
 Some inputs are local research datasets and are not distributed here. Installing the Python environment does not by itself make the full pipeline runnable. For the datasets used by the notebooks, see [Required data](#required-data).
 
@@ -18,8 +18,8 @@ Terms used below: **R&D** = research and development; **MRIO** = multi-regional 
 | Raw source databases and R&D expenditure | Run `code/know_calc_loop.ipynb`. |
 | Knowledge matrices already generated | Prepare or obtain the STAN intermediate files, then run `code/panel_estimation/panel_setup.ipynb`. |
 | Final `regression_panels/panel_{BASE}_F.csv` files | Run the estimation notebook of your choice. The three estimation variants reuse these panels. |
-| Excel estimation tables | Run `code/graphs/graphs_estimation_results.ipynb`, or prepare shock parameters with `choc_tfp/make_beta.py`. |
-| Shock parameters and NEMESIS scenario data | Prepare omega files, then run `choc_tfp/choc_horizon.ipynb`. |
+| Excel estimation tables | Run `code/graphs/graphs_estimation_results.ipynb`, or prepare shock parameters with `shock_tfp/make_beta.py`. |
+| Shock parameters and NEMESIS scenario data | Prepare omega files, then run `shock_tfp/shock_horizon.ipynb`. |
 
 ## Repository layout
 
@@ -28,20 +28,22 @@ Terms used below: **R&D** = research and development; **MRIO** = multi-regional 
 | `Pipfile`, `Pipfile.lock` | Python requirement and dependency versions. |
 | `code/project_settings.py` | Central configuration: project root, database, years, R&D dimension, and run paths. |
 | `code/know_calc_loop.ipynb` | Constructs annual knowledge matrices and auxiliary trade/production tables. |
-| `code/panel_estimation/prépa_va_STAN.ipynb` | Prepares STAN economic variables and own R&D intensity. Run once for the databases that share these inputs. |
+| `code/panel_estimation/prepare_va_STAN.ipynb` | Prepares STAN economic variables and own R&D intensity. Run once for the databases that share these inputs. |
 | `code/panel_estimation/panel_setup.ipynb` | Current combined workflow: common mapping, knowledge-channel decomposition, and final regression panels. |
 | `code/panel_estimation/estimation_notebooks/` | Reference, fine-tuned, and scaled regressions. |
 | `code/graphs/` | Knowledge decomposition, estimated coefficients, and shock figures. |
-| `choc_tfp/` | Parameter preparation and single-year/horizon shock calculations. |
+| `shock_tfp/` | Parameter preparation and single-year/horizon shock calculations. |
 | `mapping/agg_rd_to_base/` | Maps R&D classifications to each source database's working classification. |
 | `mapping/agg_base_to_rd/` | Aggregation mappings for source databases. |
 | `mapping/final_aggregation/` | Common final sector mappings and STAN region/sector dictionaries. |
 | `mapping/schema_mapping_en.svg` | Diagram of the mapping process. |
-| Root-level `RDQ*.csv` and `RDV*.csv` | R&D expenditure inputs used to construct stocks. `Q` denotes constant prices; `V` denotes current prices. |
-| `code/misc files/` | Upstream R&D preparation and currency-conversion utilities. Check their own input paths before use. |
-| `code/Estimation steps [post know_calc_loop]/` | Historical numbered copies retained as an orientation aid. **Do not run these copies as the current pipeline.** |
+| `input/R&D/RDQ_c_s*.csv`, `input/R&D/RDV_c_s*.csv` | R&D expenditure inputs used to construct stocks. `Q` denotes constant prices; `V` denotes current prices; `c_s` = country × sector, `c_s_t` = country × sector × technology. |
+| `input/data_raw/` | Raw databases (MRIO, FDI, patent citations, Kbar, STAN...). Local, not tracked. |
+| `output/` | Everything the project produces: `matrices/` (knowledge matrices of `know_calc_loop`), `results/` (panels, estimation tables, figures, shock results) and `intermediate_panels/` (STAN panels, own R&D intensity). Local, not tracked. |
+| `code/misc_files/` | Upstream R&D preparation and currency-conversion utilities. Check their own input paths before use. |
+| `code/legacy_estimation_steps/` | Historical numbered copies retained as an orientation aid. **Do not run these copies as the current pipeline.** |
 
-The following folders are normally local/generated: `data_raw/`, `SRDQ*/`, `SRDV*/`, `runs/`, `code/panel_estimation/DATA/`, and `code/panel_estimation/Panels_intermediaires/`. Some example shock input CSVs are already tracked, despite `choc_tfp/inputs/` appearing in `.gitignore`.
+The following folders are normally local: `input/data_raw/` (inputs) and `output/` (generated). Some example shock input CSVs are already tracked, despite `shock_tfp/inputs/` appearing in `.gitignore`.
 
 ## Install and activate the environment
 
@@ -138,11 +140,11 @@ Edit **`code/project_settings.py`**, not the numbered historical copy.
 | `YEARS` | Requested observation years. Choose years supported by all inputs needed for that database. |
 | `VERSION_EXIO` | EXIOBASE edition used for the EXIOBASE tables in both EXIOBASE and CAPITAL runs. |
 | `RD_UNIT` | `"volume"` → RDQ/SRDQ, constant prices; `"value"` → RDV/SRDV, current prices. |
-| `DIMENSION` | `"(c,s)"` for country × sector, or `"(c,s,t)"` to add technology. |
+| `DIMENSION` | `"c_s"` for country × sector, or `"c_s_t"` to add technology. |
 | `TECHS`, `TECH` | Matrix generation processes `TECHS`; downstream panels/estimations select one `TECH` at a time. The technology data are restricted to 2000–2021 and their available sectors. |
 | `METRIC_WANTED` | Estimation channel: `"dir"`, `"embod"`, or CAPITAL-only `"embod_investment"`. |
 | `OUTPUT_TYPE` | Include `"matrix"` for the downstream decomposition/panels; vectors alone are insufficient. |
-| `CHOC` | `False` selects baseline `_agg.csv` matrices. `True` expects separately prepared `_agg_choc.csv` files and uses a shock-tagged results directory. |
+| `CHOC` | `False` selects baseline `_agg.csv` matrices. `True` expects separately prepared `_agg_shock.csv` files and uses a shock-tagged results directory. |
 | `CHOC_SCENARIO` | Case `"A"` or `"B"`, used in shock naming/settings. Distinct from a NEMESIS scenario name. |
 | `PANEL_CODE_DIR` | Should point to `PATH_WRK + "code/panel_estimation/"`. |
 
@@ -154,14 +156,14 @@ After changing settings, save the file and restart/re-run notebooks from their i
 
 | Input | Expected location / preparation |
 | --- | --- |
-| R&D expenditure | Root-level files selected by `RD_FILES` in `know_calc_loop`. Country–sector inputs use the `_new_1995_2022.csv` files; technology inputs use `(c,s,t).csv`. |
+| R&D expenditure | Files of `input/R&D/` selected by `RD_FILES` in `know_calc_loop`. Country–sector inputs use `RDQ_c_s.csv` / `RDV_c_s.csv` (1995–2022); technology inputs use `RDQ_c_s_t.csv` / `RDV_c_s_t.csv`. |
 | EXIOBASE / FIGARO | The current notebook calls MARIO download/parsing functions. Internet access and availability of the requested edition/year are required. |
-| OECD ICIO | Local annual CSVs at `data_raw/data_OECD_ICIO/2016-2022_EXT/{year}.csv`. |
-| GTAP | The active parser reads `data_raw/V12APOW/V12APOW_MRIO_{period}/`. It uses benchmark periods 2004, 2007, 2011, 2014, 2017, 2019, and 2023 according to the requested year. The `PATHS["gtap_folder"]` entry currently names a different, unused location. |
-| CAPITAL | EXIOBASE plus `data_raw/all_kbar/Kbar_exio_v3_8_2_{year}_cfc_pxi.mat`. Missing Kbar files are requested from Zenodo record 7073276. Check year/version availability; a 404 means that requested file was not found. |
-| FDI | `data_raw/data_FDI/fdi_158_65.har`. Direction is selected by `FDI_DIRECTION`; outward and inward measures intentionally use different transfer mechanisms, normalisations, and layouts. |
-| Patent citations | CSV under `data_raw/data_Patents_Citation/`, named in `PATHS["citation"]`. |
-| STAN and exchange-rate inputs | Provide the STAN and exchange-rate files used by `prépa_va_STAN.ipynb` when preparing the shared intermediate tables. |
+| OECD ICIO | Local annual CSVs at `input/data_raw/data_OECD_ICIO/2016-2022_EXT/{year}.csv`. |
+| GTAP | The active parser reads `input/data_raw/V12APOW/V12APOW_MRIO_{period}/`. It uses benchmark periods 2004, 2007, 2011, 2014, 2017, 2019, and 2023 according to the requested year. The `PATHS["gtap_folder"]` entry (`input/data_raw/GTAP12.Power.MRIO_mario_parquet`) currently names a different, unused location. |
+| CAPITAL | EXIOBASE plus `input/data_raw/all_kbar/Kbar_exio_v3_8_2_{year}_cfc_pxi.mat`. Missing Kbar files are requested from Zenodo record 7073276. Check year/version availability; a 404 means that requested file was not found. |
+| FDI | `input/data_raw/data_FDI/fdi_158_65.har`. Direction is selected by `FDI_DIRECTION`; outward and inward measures intentionally use different transfer mechanisms, normalisations, and layouts. |
+| Patent citations | CSV under `input/data_raw/data_Patents_Citation/`, named in `PATHS["citation"]`. |
+| STAN and exchange-rate inputs | Provide the STAN and exchange-rate files in `input/data_raw/STAN/`, used by `prepare_va_STAN.ipynb` when preparing the shared intermediate tables. |
 | NEMESIS scenarios | Supply the IAMC-format CSV expected by `make_omega.py`, or pass its path explicitly. Existing small omega/beta files do not replace the full scenario input. |
 
 The effective year coverage is the intersection of R&D, source database, capital/citation/FDI inputs where relevant, and STAN coverage. The global `YEARS` list is not a guarantee that every source supports every year. The matrix notebook deletes some download/parsing folders after use; keep irreplaceable source files outside those temporary folders.
@@ -198,13 +200,13 @@ Keep these internal names distinct; the two embodied matrices then have differen
 
 ### 2. Prepare STAN variables once
 
-Run `code/panel_estimation/prépa_va_STAN.ipynb` if the intermediate files do not already exist or their underlying data changed. It prepares:
+Run `code/panel_estimation/prepare_va_STAN.ipynb` if the intermediate files do not already exist or their underlying data changed. It prepares:
 
 - `panel_va_STAN.csv`: economic variables including unit cost `c_u`, wage `w_l`, and capital cost `C_k`.
 - `panel_cit1.csv`: intermediate table used by the nonphysical branches.
-- `intensite_propre.csv`: own annual R&D expenditure and production, used to construct own R&D intensity.
+- `own_intensity.csv`: own annual R&D expenditure and production, used to construct own R&D intensity.
 
-All three must be available in **`code/panel_estimation/Panels_intermediaires/`** for the current downstream notebooks. This preparation is shared across databases and estimation variants.
+All three must be available in **`output/intermediate_panels/`** for the current downstream notebooks. This preparation is shared across databases and estimation variants.
 
 ### 3. Build the regression panel
 
@@ -254,13 +256,13 @@ The current estimators use the full sample. Own intensity `int_propre` is expres
 | --- | --- | --- |
 | `code/graphs/graphs_mrio_decomposition.ipynb` | Knowledge matrices; selected regions/sectors. | `RESULTS_DIR/graphs/mrio_decomposition/` |
 | `code/graphs/graphs_estimation_results.ipynb` | Excel tables; `TYPE_ESTIMATION = ""`, `"_finetuned"`, or `"_scaled"`. The `_finetuned` selection reads `_finetune` files. | `RESULTS_DIR/graphs/estimation_results/` |
-| `code/graphs/graph_choc.ipynb` | Single-year helpers and horizon comparisons; select scenario, year, model, and beta variants. | Currently `RESULTS_DIR/graphs/` directly. |
+| `code/graphs/graph_shocks.ipynb` | Single-year helpers and horizon comparisons; select scenario, year, model, and beta variants. | Currently `RESULTS_DIR/graphs/` directly. |
 
 Some plot cells redefine selections. Review the cells you intend to execute, including available bases, sectors, significance rules, and coefficient limits. A boxplot describes the selected collection of estimates; it is not a confidence interval for a coefficient.
 
 ## Trade scenarios and cost shocks
 
-These steps follow estimation and use baseline aggregated matrices. Leave `CHOC = False` for this baseline-input workflow. Setting it to `True` does not automatically generate the `_agg_choc.csv` matrices expected by panel setup.
+These steps follow estimation and use baseline aggregated matrices. Leave `CHOC = False` for this baseline-input workflow. Setting it to `True` does not automatically generate the `_agg_shock.csv` matrices expected by panel setup.
 
 ### Prepare beta and omega files
 
@@ -270,72 +272,72 @@ Run the Python scripts from the repository root, with the environment active and
 
 ```bash
 # Reference estimates, unbounded.
-python choc_tfp/make_beta.py --tag "" --upper none --lower none --suffix ""
+python shock_tfp/make_beta.py --tag "" --upper none --lower none --suffix ""
 
 # Reference estimates, bounded.
-python choc_tfp/make_beta.py --tag "" --upper 0 --lower -0.25 --suffix _borne
+python shock_tfp/make_beta.py --tag "" --upper 0 --lower -0.25 --suffix _bounded
 
 # Year fixed effects, unbounded.
-python choc_tfp/make_beta.py --tag _finetune --upper none --lower none --suffix _tendance
+python shock_tfp/make_beta.py --tag _finetune --upper none --lower none --suffix _trend
 
 # Year fixed effects, bounded.
-python choc_tfp/make_beta.py --tag _finetune --upper 0 --lower -0.25 --suffix _tendance_borne
+python shock_tfp/make_beta.py --tag _finetune --upper 0 --lower -0.25 --suffix _trend_bounded
 ```
 
 These commands use the script's default models (2–4), databases, significance threshold (10%), and median. Set `--models`, `--bases`, `--min-stars`, or `--stat` as needed. Bounds here mean **clipping the pooled coefficient after aggregation**, not excluding each positive database coefficient before aggregation and not constrained re-estimation.
 
-Outputs go to `choc_tfp/inputs/`: `beta{suffix}.csv`, `beta_modele3{suffix}.csv`, and `beta_modele4{suffix}.csv`. The default table paths are hard-coded to `runs/SRDQ (c,s)/estimation_results/`; for another run, use `--table BASE=PATH` overrides for the selected bases.
+Outputs go to `shock_tfp/inputs/`: `beta{suffix}.csv`, `beta_model3{suffix}.csv`, and `beta_model4{suffix}.csv`. The default table paths are hard-coded to `output/results/SRDQ_c_s/estimation_results/`; for another run, use `--table BASE=PATH` overrides for the selected bases.
 
 Generate scenario-specific import changes from the NEMESIS CSV:
 
 ```bash
-python choc_tfp/make_omega.py "D:/path/to/nemesis_data.csv" --scenarios TariffsAndSub_grp1
+python shock_tfp/make_omega.py "D:/path/to/nemesis_data.csv" --scenarios TariffsAndSub_grp1
 ```
 
-The output is `choc_tfp/inputs/omega_nemesis_TariffsAndSub_grp1.csv`. Values are percentage changes in bilateral flows relative to the reference scenario, with one column per projection year. The script's `CSV` settings must match the actual file's separator and decimal convention.
+The output is `shock_tfp/inputs/omega_nemesis_TariffsAndSub_grp1.csv`. Values are percentage changes in bilateral flows relative to the reference scenario, with one column per projection year. The script's `CSV` settings must match the actual file's separator and decimal convention.
 
 ### Calculate and compare shocks
 
-For NEMESIS projections, run **`choc_tfp/choc_horizon.ipynb`** once per beta suffix, selecting:
+For NEMESIS projections, run **`shock_tfp/shock_horizon.ipynb`** once per beta suffix, selecting:
 
 - `NEMESIS_SCENARIO`, e.g. `"TariffsAndSub_grp1"`.
 - `YEAR`: year of the baseline matrix; `YEARS_CALC`: projection years.
 - `CONTENT`: `"dir"` or `"tot"`; the latter reads `rd_tot_CI` matrices.
 - `MODELS`: e.g. `[2]` for domestic/foreign knowledge.
 - `CASES`: `"A"` for no substitution, `"B"` for domestic replacement, or both.
-- `BETA_SUFFIX`: `""`, `"_borne"`, `"_tendance"`, or `"_tendance_borne"` to match the generated parameters.
+- `BETA_SUFFIX`: `""`, `"_bounded"`, `"_trend"`, or `"_trend_bounded"` to match the generated parameters.
 - `SIMPLE`: sector totals only when `True`; totals plus supplying-bloc detail when `False` in the final IAMC export.
 
 This workflow supports EXIOBASE, FIGARO, OECD_ICIO, and GTAP. Case B needs intermediate-flow volumes (`z_CI`); check any fallback reconstruction and its reference year before interpreting the result. For `CONTENT = "tot"`, `make_beta.py` reads `rd_embod_CI` estimation tables while the shock uses supplier-indexed `rd_tot_CI`; check that this coefficient/origin convention is appropriate to the chosen specification.
 
-Horizon CSVs are written directly under `RESULTS_DIR/choc_tfp/`, including:
+Horizon CSVs are written directly under `RESULTS_DIR/shock_tfp/`, including:
 
-- `resultats{model}_blocs_bilateral_{BASE}_{CONTENT}_horizon_{scenario}{suffix}.csv` — log cost effects by importing bloc, sector, supplying bloc, and year.
+- `results_model{model}_blocs_bilateral_{BASE}_{CONTENT}_horizon_{scenario}{suffix}.csv` — log cost effects by importing bloc, sector, supplying bloc, and year.
 - `ENTICE_T34_{BASE}-{CONTENT}_AllCases_{scenario}{suffix}.csv` — final IAMC-style percentage export.
-- A `_comparaison_VA.csv` export comparing aggregate results with/without value-added weighting. This part also requires `panel_va_STAN.csv`.
+- A `_VA_comparison.csv` export comparing aggregate results with/without value-added weighting. This part also requires `panel_va_STAN.csv`.
 
-Then run the horizon-comparison cells in `code/graphs/graph_choc.ipynb`. They read these suffixes, skip unavailable versions, and use a common vertical scale. Instructions refer to the current unversioned `choc_horizon.ipynb` notebook.
+Then run the horizon-comparison cells in `code/graphs/graph_shocks.ipynb`. They read these suffixes, skip unavailable versions, and use a common vertical scale. Instructions refer to the current unversioned `shock_horizon.ipynb` notebook.
 
-`choc_tfp/choc_tfp.ipynb` is the separate **single-year** workflow using `omega.csv` and unsuffixed beta files. It writes `resultats{model}_blocs_{BASE}_{CONTENT}_{YEAR}_choc{case}.csv` under `RESULTS_DIR/choc_tfp/{BASE}/`. Do not confuse this location with horizon outputs.
+`shock_tfp/shock_tfp.ipynb` is the separate **single-year** workflow using `omega.csv` and unsuffixed beta files. It writes `results_model{model}_blocs_{BASE}_{CONTENT}_{YEAR}_shock{case}.csv` under `RESULTS_DIR/shock_tfp/{BASE}/`. Do not confuse this location with horizon outputs.
 
 `dlnCost` is a log cost change: the exact percentage is `100 * (exp(dlnCost) - 1)`. Origin contributions add in logs; their individually converted percentages do not add exactly. Each projection year is a gap against that year's baseline, not an increment to accumulate over time.
 
 ## Where outputs are stored
 
-The central settings derive separate source and result roots. For the common baseline configuration `RD_UNIT = "volume"`, `DIMENSION = "(c,s)"`, and `CHOC = False`:
+The central settings derive separate source and result roots. For the common baseline configuration `RD_UNIT = "volume"`, `DIMENSION = "c_s"`, and `CHOC = False`:
 
 | Output | Path relative to `PATH_WRK` |
 | --- | --- |
-| Annual matrices, vectors, and common-mapping copies | `SRDQ (c,s)/{BASE}/output_loop_{BASE}_{year}/` |
-| Trade and production tables, years as columns | `SRDQ (c,s)/{BASE}/output_loop_{BASE}/` |
-| Knowledge-channel panels | `runs/SRDQ (c,s)/know_panels/` |
-| Final regression panels | `runs/SRDQ (c,s)/regression_panels/` |
-| Estimated coefficients | `runs/SRDQ (c,s)/estimation_results/{BASE}/tab_{BASE}_{METRIC}{CHOC_TAG}{variant}.xlsx` |
-| Figures | `runs/SRDQ (c,s)/graphs/`, with subfolders as listed above. |
-| Single-year shocks | `runs/SRDQ (c,s)/choc_tfp/{BASE}/` |
-| Horizon shocks and IAMC exports | `runs/SRDQ (c,s)/choc_tfp/` |
+| Annual matrices, vectors, and common-mapping copies | `output/matrices/SRDQ_c_s/{BASE}/output_loop_{BASE}_{year}/` |
+| Trade and production tables, years as columns | `output/matrices/SRDQ_c_s/{BASE}/output_loop_{BASE}/` |
+| Knowledge-channel panels | `output/results/SRDQ_c_s/know_panels/` |
+| Final regression panels | `output/results/SRDQ_c_s/regression_panels/` |
+| Estimated coefficients | `output/results/SRDQ_c_s/estimation_results/{BASE}/tab_{BASE}_{METRIC}{CHOC_TAG}{variant}.xlsx` |
+| Figures | `output/results/SRDQ_c_s/graphs/`, with subfolders as listed above. |
+| Single-year shocks | `output/results/SRDQ_c_s/shock_tfp/{BASE}/` |
+| Horizon shocks and IAMC exports | `output/results/SRDQ_c_s/shock_tfp/` |
 
-`value` changes `SRDQ` to `SRDV`. Technology runs add `/{TECH}` beneath `SRDQ (c,s,t)` or `SRDV (c,s,t)` in both source and run paths. Shock-panel settings add `_chocA` or `_chocB` to the results run path; print `SRC_DIR` and `RESULTS_DIR` to confirm the effective locations.
+`value` changes `SRDQ` to `SRDV`. Technology runs add `/{TECH}` beneath `SRDQ_c_s_t` or `SRDV_c_s_t` in both source and run paths. Shock-panel settings add `_shockA` or `_shockB` to the results run path; print `SRC_DIR` and `RESULTS_DIR` to confirm the effective locations.
 
 Reference estimation tables have an empty variant suffix; alternatives use `_finetune` and `_scaled`. Repeating the same selections overwrites the same filenames. Keep the configuration, data editions, estimation suffix, and shock suffix with any results you share.
 

@@ -45,13 +45,13 @@ METRIC = METRIC_SPE[f"{BASE}_{METRIC_WANTED}"]
 # Used by know_calc_loop, panel_setup, the estimation notebooks, and the graph notebooks.
 # ============================================================
 RD_UNIT = "volume"        # "value" -> RDV files (current prices, SRDV) | "volume" -> RDQ files (2020 prices, SRDQ)
-DIMENSION = "(c,s)"      # "(c,s)" without technology | "(c,s,t)" with technology
+DIMENSION = "c_s"      # "c_s" without technology | "c_s_t" with technology
 # What know_calc_loop writes: "matrix" (origin x destination), "vector" (column totals,
 # one per destination, with the identifiers appropriate to each measure), or both.
 # panel_setup needs matrices to retain country/sector origin detail; keep "matrix".
 # For CAPITAL, panel_setup includes direct, supply-chain, and investment channels together.
 OUTPUT_TYPE = ("matrix", "vector")
-# Technologies computed by know_calc_loop when DIMENSION == "(c,s,t)": list of codes/patterns
+# Technologies computed by know_calc_loop when DIMENSION == "c_s_t": list of codes/patterns
 # ("TG*" = every code starting with TG), or dict {name: [codes]} to group codes.
 # Each selected technology produces its own knowledge outputs; source tables are shared within a year.
 TECHS = ["TJ11", "TJ07", "TJ01"]
@@ -60,9 +60,9 @@ TECHS = ["TJ11", "TJ07", "TJ01"]
 TECH = "TJ11"
 
 # ---- baseline versus pre-shocked matrix inputs -------------------------------------------------------
-# CHOC = False: panel_setup and estimators read baseline *_agg.csv matrices and write to runs/<run>/.
-# CHOC = True: they expect separately prepared *_agg_choc.csv matrices and write to runs/<run>_choc<case>/.
-# The current choc_tfp/choc_horizon notebooks calculate cost effects; they do not create those shocked matrix files.
+# CHOC = False: panel_setup and estimators read baseline *_agg.csv matrices and write to output/results/<run>/.
+# CHOC = True: they expect separately prepared *_agg_shock.csv matrices and write to output/results/<run>_shock<case>/.
+# The current shock_tfp/shock_horizon notebooks calculate cost effects; they do not create those shocked matrix files.
 # For their usual baseline-input workflow, keep CHOC = False. Cases A/B are distinct from NEMESIS scenario names.
 CHOC = False
 CHOC_SCENARIO = "B"      # scenario of the shocked matrices: "A" (no substitution) | "B" (domestic production fills the gap)
@@ -79,8 +79,8 @@ def _tech_labels(techs):
 
 if RD_UNIT not in ("value", "volume"):
     raise ValueError(f"RD_UNIT must be 'value' or 'volume', got {RD_UNIT!r}")
-if DIMENSION not in ("(c,s)", "(c,s,t)"):
-    raise ValueError(f"DIMENSION must be '(c,s)' or '(c,s,t)', got {DIMENSION!r}")
+if DIMENSION not in ("c_s", "c_s_t"):
+    raise ValueError(f"DIMENSION must be 'c_s' or 'c_s_t', got {DIMENSION!r}")
 OUTPUT_TYPE = (OUTPUT_TYPE,) if isinstance(OUTPUT_TYPE, str) else tuple(OUTPUT_TYPE)
 if not OUTPUT_TYPE or not set(OUTPUT_TYPE) <= {"matrix", "vector"}:
     raise ValueError(f"OUTPUT_TYPE must be 'matrix', 'vector' or both ('matrix', 'vector'), got {OUTPUT_TYPE!r}")
@@ -88,21 +88,30 @@ if CHOC_SCENARIO not in ("A", "B"):
     raise ValueError(f"CHOC_SCENARIO must be 'A' or 'B', got {CHOC_SCENARIO!r}")
 if CHOC and BASE not in ("EXIOBASE", "FIGARO", "OECD_ICIO", "GTAP"):
     raise ValueError(f"CHOC = True needs an MRIO base (EXIOBASE, FIGARO, OECD_ICIO or GTAP), got BASE={BASE!r}")
-AGG_SUFFIX = "_agg_choc" if CHOC else "_agg"                  # Suffix of the matrices read by panel_setup.
-CHOC_TAG = f"_choc{CHOC_SCENARIO}" if CHOC else ""            # suffix of the results folder
+AGG_SUFFIX = "_agg_shock" if CHOC else "_agg"                  # Suffix of the matrices read by panel_setup.
+CHOC_TAG = f"_shock{CHOC_SCENARIO}" if CHOC else ""            # suffix of the results folder
 
-TECH_LABELS = _tech_labels(TECHS) if DIMENSION == "(c,s,t)" else []
-if DIMENSION == "(c,s,t)":
+TECH_LABELS = _tech_labels(TECHS) if DIMENSION == "c_s_t" else []
+if DIMENSION == "c_s_t":
     if TECH not in TECH_LABELS:
         raise ValueError(f"TECH={TECH!r} is not one of the technologies of TECHS: {TECH_LABELS}")
-    YEARS = [y for y in YEARS if 2000 <= y <= 2021]   # the (c,s,t) files cover 2000-2021 only
+    YEARS = [y for y in YEARS if 2000 <= y <= 2021]   # the c_s_t files cover 2000-2021 only
 
-OUTPUT_ROOT = ("SRDV" if RD_UNIT == "value" else "SRDQ") + f" {DIMENSION}"   # Matrix-output root written by know_calc_loop.
-RUN_DIR = OUTPUT_ROOT + (f"/{TECH}" if DIMENSION == "(c,s,t)" else "")        # one folder per technology in (c,s,t)
-SRC_DIR = PATH_WRK + RUN_DIR + "/"                    # Knowledge-matrix directory of the selected run.
-SRC_DIRS = ([PATH_WRK + f"{OUTPUT_ROOT}/{t}/" for t in TECH_LABELS] if DIMENSION == "(c,s,t)" else [PATH_WRK + OUTPUT_ROOT + "/"])
-RESULTS_DIR = PATH_WRK + f"runs/{RUN_DIR}{CHOC_TAG}/"           # everything produced after the aggregation, one tree per run:
-#   know_panels/  regression_panels/  estimation_results/<BASE>/  graphs/  choc_tfp/
+OUTPUT_ROOT = ("SRDV" if RD_UNIT == "value" else "SRDQ") + f"_{DIMENSION}"   # Name of the run folder (SRDQ_c_s, SRDV_c_s_t ...).
+RUN_DIR = OUTPUT_ROOT + (f"/{TECH}" if DIMENSION == "c_s_t" else "")        # one folder per technology in c_s_t
+
+# ---- folders: what the project reads is under input/, what it produces is under output/ -----------------------------------------
+INPUT_DIR = PATH_WRK + "input/"                       # R&D files and raw databases
+RD_DIR = INPUT_DIR + "R&D/"                           # R&D expenditure files (RDQ_c_s.csv, RDV_c_s.csv, RDQ_c_s_t.csv, RDV_c_s_t.csv ...)
+RAW_DIR = INPUT_DIR + "data_raw/"                     # raw databases (MRIO, FDI, citations, STAN ...)
+OUTPUT_DIR = PATH_WRK + "output/"
+MATRICES_DIR = OUTPUT_DIR + "matrices/"               # knowledge matrices written by know_calc_loop, one folder per run (SRDQ_c_s, SRDQ_c_s_t/<TECH> ...)
+INTERMEDIATE_DIR = OUTPUT_DIR + "intermediate_panels/"   # STAN panels and own R&D intensity written by prepare_va_STAN
+
+SRC_DIR = MATRICES_DIR + RUN_DIR + "/"                # Knowledge-matrix directory of the selected run.
+SRC_DIRS = ([MATRICES_DIR + f"{OUTPUT_ROOT}/{t}/" for t in TECH_LABELS] if DIMENSION == "c_s_t" else [MATRICES_DIR + OUTPUT_ROOT + "/"])
+RESULTS_DIR = OUTPUT_DIR + f"results/{RUN_DIR}{CHOC_TAG}/"      # everything produced after the aggregation, one tree per run:
+#   know_panels/  regression_panels/  estimation_results/<BASE>/  graphs/  shock_tfp/
 
 _code = PATH_WRK + "code/"
 PANEL_CODE_DIR = _code + "panel_estimation/"

@@ -27,11 +27,11 @@ import pandas as pd
 RATE_MODE = "fixed"          # "fixed" or "year"
 REF_YEAR = 2020
 ROOT = "C:/Users/oscar/Desktop/ENTICE/rendu_fin_stage/"
-DATA = glob.glob(ROOT + "code/cr*panel*/DATA/")[0]           # accent-safe folder lookup
+DATA = ROOT + "input/data_raw/STAN/"
 WRITE = len(sys.argv) > 1 and sys.argv[1] == "write"
 
 # ---- exchange rates -----------------------------------------------------------------------------------------------
-pays = pd.read_excel(DATA + "pays_annees_STAN.xlsx", sheet_name="Pays")
+pays = pd.read_excel(DATA + "STAN_country_years.xlsx", sheet_name="Pays")
 cur_of = dict(zip(pays["Code"], pays["currency_cd"]))
 
 r = pd.read_excel(DATA + "Exchange_rates_euro_STAN.xlsx", sheet_name="Sheet 1", header=None)

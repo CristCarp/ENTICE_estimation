@@ -1,4 +1,4 @@
-"""Construit, a partir d'un fichier de resultats NEMESIS (format IAMC), la variation de la PRODUCTION de chaque (bloc, secteur) : entree du cas C de choc_horizon.
+"""Construit, a partir d'un fichier de resultats NEMESIS (format IAMC), la variation de la PRODUCTION de chaque (bloc, secteur) : entree du cas C de shock_horizon.
 
 Variables utilisees : "Trade|Production|<secteur NEMESIS>" (une ligne par region NEMESIS, en billion US$2010/yr).
 
@@ -10,7 +10,7 @@ Pour chaque scenario de choc (tous sauf le scenario de reference), chaque bloc e
 
 Sortie (dans inputs/, un fichier par scenario) : prod_nemesis_<scenario>.csv, une colonne par annee :
     bloc, sector, 2025, 2030, 2035, 2040, 2045, 2050     (valeurs = delta_pct)
-Pour l'utiliser dans choc_horizon (cas C) : PROD_FILE = "prod_nemesis_TariffsAndSub_grp1.csv" (par defaut : celui du scenario NEMESIS_SCENARIO).
+Pour l'utiliser dans shock_horizon (cas C) : PROD_FILE = "prod_nemesis_TariffsAndSub_grp1.csv" (par defaut : celui du scenario NEMESIS_SCENARIO).
 
 Usage :
     python make_prod.py
